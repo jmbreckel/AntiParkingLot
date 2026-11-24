@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Prompt Parking Lot</title>
+  <style>
+    :root {
+      --bg-primary: var(--color-background-primary, #0f172a);
+      --bg-secondary: var(--color-background-secondary, #1e293b);
+      --bg-tertiary: var(--color-background-tertiary, #273549);
+      --text-primary: var(--color-text-primary, #f1f5f9);
+      --text-secondary: var(--color-text-secondary, #94a3b8);
+      --text-tertiary: var(--color-text-tertiary, #64748b);
+      --border-primary: var(--color-border-primary, rgba(148, 163, 184, 0.22));
+      --accent: #38bdf8;
+      --accent-indigo: #6366f1;
+      --success: #34d399;
+      --warning: #fbbf24;
+      --danger: #fb7185;
+      --font: var(--font-sans, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: var(--font);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .shell {
+      max-width: 880px;
+      margin: 0 auto;
+      padding: 11px 12px 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .brand-badge {
+      width: 26px;
+      height: 26px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #0ea5e9, #6366f1 60%, #8b5cf6);
+      color: #fff;
+      font-weight: 800;
+      font-size: 14px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(99, 102, 241, 0.35);
+      flex-shrink: 0;
+    }
+
+    .brand-title {
+      font-weight: 700;
+      font-size: 13.5px;
+      letter-spacing: -0.01em;
+    }
+
+    .brand-sub {
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    .top-controls {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .safe-note {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      padding: 5px 9px;
+      border-radius: 8px;
+      background: rgba(56, 189, 248, 0.08);
+      border: 1px solid rgba(56, 189, 248, 0.24);
+      color: var(--text-secondary);
+      font-size: 11px;
+    }
+
+    .draft-indicator {
+      font-size: 10.5px;
+      color: var(--accent);
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .composer {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-primary);
+      border-radius: 11px;
+      padding: 9px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      transition: border-color 0.18s, box-shadow 0.18s;
+    }
+
+    .composer.listening {
+      border-color: rgba(244, 63, 94, 0.72);
+      box-shadow: 0 0 0 2px rgba(244, 63, 94, 0.18);
+    }
+
+    .composer textarea,
+    .edit-box textarea {
+      width: 100%;
+      min-height: 68px;
+      resize: vertical;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      border: 1px solid var(--border-primary);
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-family: inherit;
+      font-size: 12.5px;
+      line-height: 1.45;
+      outline: none;
+    }
+
+    .composer textarea:focus,
+    .edit-box textarea:focus,
+    .input-sm:focus,
+    select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.18);
+    }
+
+    .voice-live-preview {
+      display: none;
+      align-items: center;
+      gap: 6px;
+      font-size: 11.5px;
+      color: #fda4af;
+      padding: 3px 6px;
+      border-radius: 6px;
+      background: rgba(244, 63, 94, 0.1);
+      border: 1px dashed rgba(251, 113, 133, 0.45);
+    }
+
+    .composer-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .input-sm,
+    select {
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      border: 1px solid var(--border-primary);
+      border-radius: 7px;
+      padding: 5px 8px;
+      font-family: inherit;
+      font-size: 12px;
+      outline: none;
+      max-width: 100%;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      padding: 5px 9px;
+      border-radius: 7px;
+      border: 1px solid var(--border-primary);
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 11.5px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: filter 0.14s, border-color 0.14s, transform 0.06s;
+    }
+
+    .btn:hover:not(:disabled) {
+      filter: brightness(1.1);
+      border-color: rgba(56, 189, 248, 0.5);
+    }
+
+    .btn:active:not(:disabled) {
+      transform: translateY(1px);
+    }
+
+    .btn:disabled {
+      opacity: 0.48;
+      cursor: not-allowed;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #0284c7, #4f46e5);
+      border-color: rgba(99, 102, 241, 0.65);
+      color: #fff;
+    }
+
+    .btn-voice {
+      background: rgba(56, 189, 248, 0.12);
+      border-color: rgba(56, 189, 248, 0.42);
+      color: #7dd3fc;
+    }
+
+    .btn-voice.active {
+      background: rgba(244, 63, 94, 0.22);
+      border-color: rgba(251, 113, 133, 0.8);
+      color: #fecdd3;
+      animation: voicePulse 1.3s infinite ease-in-out;
+    }
+
+    @keyframes voicePulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.42); }
+      50% { box-shadow: 0 0 0 5px rgba(244, 63, 94, 0.05); }
+    }
+
+    .btn-send {
+      background: rgba(16, 185, 129, 0.16);
+      border-color: rgba(52, 211, 153, 0.55);
+      color: #34d399;
+    }
+
+    .btn-newchat {
+      background: rgba(99, 102, 241, 0.16);
+      border-color: rgba(129, 140, 248, 0.55);
+      color: #a5b4fc;
+    }
+
+    .btn-ctx-active {
+      background: rgba(251, 191, 36, 0.2);
+      border-color: rgba(251, 191, 36, 0.65);
+      color: #fde047;
+    }
+
+    .btn-danger {
+      background: rgba(244, 63, 94, 0.12);
+      border-color: rgba(251, 113, 133, 0.42);
+      color: #fda4af;
+    }
+
+    .btn-icon {
+      padding: 4px 7px;
+      font-size: 11px;
+    }
+
+    .batch-bar {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      flex-wrap: wrap;
+      padding: 7px 10px;
+      border-radius: 9px;
+      background: rgba(99, 102, 241, 0.14);
+      border: 1px solid rgba(129, 140, 248, 0.5);
+    }
+
+    .batch-title {
+      font-size: 11.5px;
+      font-weight: 700;
+      color: #c7d2fe;
+    }
+
+    .filter-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 7px;
+      flex-wrap: wrap;
+    }
+
+    .tabs {
+      display: inline-flex;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-primary);
+      border-radius: 8px;
+      padding: 2px;
+      gap: 2px;
+    }
+
+    .tab-btn {
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      font-family: inherit;
+      font-size: 11.5px;
+      font-weight: 600;
+      padding: 4px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .tab-btn.active {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    }
+
+    .cards {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-primary);
+      border-radius: 10px;
+      padding: 9px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      transition: border-color 0.15s;
+    }
+
+    .card.pinned {
+      border-color: rgba(251, 191, 36, 0.52);
+    }
+
+    .card.selected {
+      border-color: rgba(129, 140, 248, 0.72);
+      box-shadow: 0 0 0 1px rgba(129, 140, 248, 0.25);
+    }
+
+    .card.done {
+      opacity: 0.68;
+    }
+
+    .card-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .card-badges {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+
+    .pill {
+      font-size: 10.5px;
+      font-weight: 700;
+      padding: 1.5px 6px;
+      border-radius: 999px;
+      border: 1px solid var(--border-primary);
+      background: var(--bg-primary);
+      color: var(--text-secondary);
+    }
+
+    .pill-high {
+      color: #fda4af;
+      border-color: rgba(251, 113, 133, 0.5);
+      background: rgba(244, 63, 94, 0.12);
+    }
+
+    .pill-low {
+      color: #93c5fd;
+      border-color: rgba(96, 165, 250, 0.4);
+      background: rgba(59, 130, 246, 0.1);
+    }
+
+    .pill-proj {
+      color: #7dd3fc;
+      border-color: rgba(56, 189, 248, 0.42);
+      background: rgba(14, 165, 233, 0.12);
+    }
+
+    .pill-pin {
+      color: #fde047;
+      border-color: rgba(250, 204, 21, 0.5);
+      background: rgba(250, 204, 21, 0.13);
+    }
+
+    .prompt-body {
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-size: 12.5px;
+      line-height: 1.48;
+      color: var(--text-primary);
+      background: var(--bg-primary);
+      border: 1px solid var(--border-primary);
+      border-radius: 7px;
+      padding: 7px 9px;
+      max-height: 180px;
+      overflow-y: auto;
+    }
+
+    .card.done .prompt-body {
+      text-decoration: line-through;
+      color: var(--text-secondary);
+    }
+
+    .notes-line {
+      font-size: 11.5px;
+      color: var(--text-secondary);
+      padding-left: 2px;
+    }
+
+    .card-foot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 1px;
+    }
+
+    .action-group {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+
+    .empty {
+      text-align: center;
+      padding: 24px 14px;
+      border: 1px dashed var(--border-primary);
+      border-radius: 10px;
+      color: var(--text-secondary);
+      font-size: 12.5px;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 12px;
+      right: 12px;
+      background: #0f172a;
+      color: #e2e8f0;
+      border: 1px solid rgba(56, 189, 248, 0.55);
+      border-radius: 8px;
+      padding: 6px 11px;
+      font-size: 12px;
+      font-weight: 600;
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45);
+      display: none;
+      z-index: 999;
+    }
+
+    .ctx-banner {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 6px 10px;
+      border-radius: 8px;
+      background: rgba(250, 204, 21, 0.12);
+      border: 1px solid rgba(250, 204, 21, 0.45);
+      color: #fef08a;
+      font-size: 11.5px;
+    }
+
+    .chk-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .card-select-chk {
+      cursor: pointer;
+      margin: 0 2px 0 0;
+      accent-color: #6366f1;
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="topbar">
+      <div class="brand">
+        <span class="brand-badge">P</span>
+        <div>
+          <div class="brand-title">Prompt Parking Lot</div>
+          <div class="brand-sub" id="stats-sub">Loading parked ideas…</div>
+        </div>
+      </div>
+      <div class="top-controls">
+        <label class="chk-label" id="auto-done-wrap" title="Automatically mark an idea Done when you send it to Antigravity">
+          <input type="checkbox" id="chk-auto-done" checked />
+          Mark done on send
+        </label>
+        <button type="button" class="btn btn-icon" id="btn-refresh" title="Reload from disk">↻</button>
+      </div>
+    </div>
+
+    <div class="safe-note">
+      <span>🛡️ Type or speak ideas anytime while Antigravity works — nothing sends until you click <b>Send</b>.</span>
+      <span class="draft-indicator" id="draft-status"></span>
+    </div>
+
+    <div class="ctx-banner" id="ctx-banner">
+      <span id="ctx-banner-text">0 ideas attached to next message</span>
+      <button type="button" class="btn btn-icon" id="btn-clear-ctx">Clear</button>
+    </div>
+
+    <!-- Quick Park Composer -->
+    <div class="composer" id="composer-box">
+      <textarea id="input-prompt" placeholder="Type or click 🎤 Voice to dictate an idea while Antigravity works… (Ctrl+Enter to park)"></textarea>
+      <div class="voice-live-preview" id="voice-preview"></div>
+      <div class="composer-row">
+        <input type="text" id="input-project" class="input-sm" list="project-datalist" placeholder="Project (optional)" style="flex: 1 1 110px; min-width: 100px;" />
+        <datalist id="project-datalist"></datalist>
+        <select id="input-priority" title="Priority">
+          <option value="normal">⚡ Normal</option>
+          <option value="high">🔥 High</option>
+          <option value="low">🧊 Low</option>
+        </select>
+        <input type="text" id="input-notes" class="input-sm" placeholder="Optional note…" style="flex: 2 1 120px; min-width: 105px;" />
+        <label class="chk-label" title="Pin to top">
+          <input type="checkbox" id="input-pinned" /> 📌
+        </label>
+        <button type="button" class="btn btn-voice" id="btn-voice" title="Dictate idea with voice-to-text (Alt+V, or Win+H)">🎤 Voice</button>
+        <button type="button" class="btn btn-primary" id="btn-park">+ Park Idea</button>
+      </div>
+    </div>
+
+    <!-- Multi-Select Batch Action Bar -->
+    <div class="batch-bar" id="batch-bar">
+      <span class="batch-title" id="batch-count">0 selected</span>
+      <div class="action-group">
+        <button type="button" class="btn btn-send" id="btn-batch-send" title="Combine selected ideas into one prompt and send to current chat">▶ Send Selected</button>
+        <button type="button" class="btn btn-newchat" id="btn-batch-new" title="Start a new chat with all selected ideas combined">↗ New Chat</button>
+        <button type="button" class="btn" id="btn-batch-copy" title="Copy selected ideas as a numbered list">📋 Copy</button>
+        <button type="button" class="btn" id="btn-batch-done" title="Mark selected ideas Done">✓ Done</button>
+        <button type="button" class="btn btn-icon" id="btn-batch-clear" title="Clear selection">✕</button>
+      </div>
+    </div>
+
+    <!-- Filter & Search Bar -->
+    <div class="filter-bar">
+      <div class="tabs">
+        <button type="button" class="tab-btn active" data-tab="parked" id="tab-parked">Parked (0)</button>
+        <button type="button" class="tab-btn" data-tab="done" id="tab-done">Done (0)</button>
+        <button type="button" class="tab-btn" data-tab="all" id="tab-all">All (0)</button>
+      </div>
+      <div class="action-group" style="flex: 1 1 180px; justify-content: flex-end;">
+        <select id="filter-project" title="Filter by project" style="max-width: 135px;">
+          <option value="">All Projects</option>
+        </select>
+        <input type="search" id="filter-search" class="input-sm" placeholder="Search…" style="flex: 1 1 100px; min-width: 90px; max-width: 180px;" />
+        <button type="button" class="btn btn-danger btn-icon" id="btn-clear-done" style="display: none;" title="Delete all Done items">Clear Done</button>
+      </div>
+    </div>
+
+    <!-- Cards Container -->
+    <div class="cards" id="cards-list"></div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- INLINED_BUNDLE -->
+</body>
+</html>

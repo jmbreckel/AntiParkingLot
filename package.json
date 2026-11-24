@@ -1,0 +1,29 @@
+{
+  "name": "anti-parking-lot",
+  "version": "1.0.0",
+  "description": "Antigravity Prompt Parking Lot plugin & Side-Pane MCP App UI for parking ideas while Antigravity works and sending them when ready.",
+  "type": "module",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jmbreckel/AnitParkingLot.git"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "build:diagrams": "node scripts/render-diagrams.mjs",
+    "install:global": "node scripts/install-global.mjs",
+    "uninstall:global": "node scripts/install-global.mjs --uninstall",
+    "start": "node server/index.mjs",
+    "test": "node test/verify_mcp.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/ext-apps": "^1.0.0",
+    "@modelcontextprotocol/sdk": "^1.11.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0",
+    "mermaid": "^11.4.1",
+    "puppeteer-core": "^24.0.0"
+  }
+}

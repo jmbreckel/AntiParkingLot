@@ -1,0 +1,26 @@
+flowchart LR
+    subgraph Source["UI & Server Source"]
+        AppJS["ui/app.js (@modelcontextprotocol/ext-apps)"]
+        TplHTML["ui/template.html (Theme-Aware CSS Shell)"]
+        BuildScript["scripts/build.mjs (esbuild Bundler)"]
+    end
+
+    subgraph Bundle["Distributable Artifact"]
+        DistHTML["dist/app.html (Single-File UI Bundle)"]
+    end
+
+    subgraph Registration["Global Discovery Across All Workspaces"]
+        PluginsJSON["~/.gemini/config/plugins.json (include_only: AntiParkingLot)"]
+        LS["Antigravity Language Server (GetAllPlugins)"]
+        ActiveMCP["MCP Server: AntiParkingLot_parking-lot"]
+        ActiveSkill["Global Skill: parking-lot"]
+    end
+
+    AppJS --> BuildScript
+    TplHTML --> BuildScript
+    BuildScript -->|"npm run build"| DistHTML
+
+    PluginsJSON -->|"Points to repo parent"| LS
+    LS -->|"Registers MCP tools & ui:// resource"| ActiveMCP
+    LS -->|"Injects SKILL.md metadata"| ActiveSkill
+    DistHTML -->|"Read by server/index.mjs"| ActiveMCP

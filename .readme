@@ -1,0 +1,27 @@
+AntiParkingLot — Prompt Parking Lot for Antigravity
+Repository: https://github.com/jmbreckel/AnitParkingLot.git
+
+An Antigravity Plugin + Side-Pane MCP App for capturing follow-up ideas (text or voice)
+while Antigravity is busy working—without interrupting active runs—and sending them when ready.
+
+Quick Install (Global on Antigravity):
+  git clone https://github.com/jmbreckel/AnitParkingLot.git AntiParkingLot
+  cd AntiParkingLot
+  npm run install:global
+
+Install Options:
+  npm run install:global                 # Zero-copy registration in ~/.gemini/config/plugins.json
+  npm run install:global -- --mode=link  # Junction/symlink in ~/.gemini/config/plugins/anti-parking-lot
+  npm run install:global -- --mode=copy  # Standalone copy in ~/.gemini/config/plugins/anti-parking-lot
+  npm run uninstall:global               # Remove global install (preserves saved data)
+
+Data Storage:
+  ~/.gemini/config/plugin-data/anti-parking-lot/parking_lot.json
+
+Documentation:
+  - README.md                        Full project overview
+  - documentation/installation.md    Detailed install, update, and troubleshooting guide
+  - documentation/user-guide.md      Day-to-day workflow and shortcuts
+  - documentation/architecture.md    System design and discovery pipeline
+  - documentation/mcp-reference.md   MCP tools and storage schema
+  - instruction.md                   Conversation workflow reference

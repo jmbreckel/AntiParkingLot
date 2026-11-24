@@ -1,0 +1,40 @@
+# Node dependencies
+node_modules/
+.npm/
+.pnp.*
+
+# Local runtime plugin state & atomic temp files
+data/
+parking_lot.json
+parking_lot.*.tmp
+*.tmp
+
+# Test & coverage artifacts
+coverage/
+.nyc_output/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# OS metadata
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Editor / IDE directories
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
+*.swo
+*~

@@ -1,0 +1,43 @@
+flowchart TB
+    subgraph Host["Antigravity IDE Host"]
+        direction TB
+        SidePane["Side Pane UI (aux_pane Entrypoint)"]
+        Sidebar["Left Sidebar View (global Entrypoint)"]
+        ChatAgent["Active Chat Agent (Uninterrupted While Working)"]
+        Discovery["Language Server Plugin Loader"]
+    end
+
+    subgraph Plugin["AntiParkingLot Plugin (Repo Folder)"]
+        direction TB
+        Manifests["plugin.json + mcp_config.json"]
+        Skill["skills/parking-lot/SKILL.md"]
+        UIApp["Bundled MCP App UI (dist/app.html)"]
+        MCPServer["Node.js MCP Server (server/index.mjs)"]
+        Voice["VoiceDictationManager (server/voice.mjs)"]
+        Store["ParkingLotStore (server/store.mjs)"]
+    end
+
+    subgraph OS["Local OS & Persistent Storage"]
+        Mic["Windows Neural / Offline Speech-to-Text Mic"]
+        JSONFile["~/.gemini/config/plugin-data/anti-parking-lot/parking_lot.json"]
+        GlobalReg["~/.gemini/config/plugins.json"]
+    end
+
+    GlobalReg -->|"Registers plugin path"| Discovery
+    Discovery -->|"Loads manifest & skill"| Manifests
+    Discovery -->|"Loads skill instructions"| Skill
+    Discovery -->|"Spawns stdio MCP process"| MCPServer
+
+    MCPServer -->|"Serves ui://parking-lot/app.html"| UIApp
+    UIApp -->|"Renders inside"| SidePane
+    UIApp -->|"Renders inside"| Sidebar
+
+    SidePane -->|"Direct app_* & voice_* calls (Zero Agent Interruption)"| MCPServer
+    Sidebar -->|"Direct app_* & voice_* calls (Zero Agent Interruption)"| MCPServer
+    SidePane -.->|"sendMessage / updateModelContext (Only When User Clicks Send)"| ChatAgent
+    ChatAgent <-->|"park_prompt / list_parked_prompts"| MCPServer
+
+    MCPServer <-->|"Speech-to-text stream"| Voice
+    Voice <-->|"Captures & transcribes voice"| Mic
+    MCPServer <-->|"Atomic temp-file + rename"| Store
+    Store <-->|"Reads & writes JSON + Draft"| JSONFile

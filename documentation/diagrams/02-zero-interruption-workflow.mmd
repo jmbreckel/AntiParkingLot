@@ -1,0 +1,49 @@
+sequenceDiagram
+    autonumber
+    actor User
+    participant Pane as Side-Pane UI (app.html)
+    participant Server as MCP Server (index.mjs)
+    participant Voice as Voice Engine (voice.mjs)
+    participant Disk as parking_lot.json
+    participant Agent as Antigravity Chat Agent
+
+    Note over User,Agent: Phase 1 — Antigravity Is Actively Working (Do Not Interrupt)
+    Agent->>Agent: Executing long-running coding or research task
+    User->>Pane: Clicks "+" -> "Parking Lot" in Side Pane
+    Pane->>Server: app_get_state({})
+    Server->>Disk: Read items + saved draft
+    Disk-->>Server: Snapshot JSON
+    Server-->>Pane: Render parked ideas & restore unsent draft
+
+    opt Voice-to-Text Dictation ("🎤 Voice" or Alt+V)
+        User->>Pane: Clicks "🎤 Voice" and speaks idea
+        Pane->>Server: app_voice_start({})
+        Server->>Voice: Start Windows Neural / Offline Speech Recognizer
+        loop Every 350ms while speaking
+            Pane->>Server: app_voice_poll({ cursor })
+            Voice-->>Server: Recognized text segments + live partial
+            Server-->>Pane: Append text into composer & auto-save draft
+        end
+        User->>Pane: Clicks "⏹ Stop"
+        Pane->>Server: app_voice_stop({ cursor })
+    end
+
+    User->>Pane: Types or edits idea -> presses Ctrl+Enter ("+ Park Idea")
+    Pane->>Server: app_save_item({ prompt, project, priority, clearDraft: true })
+    Server->>Disk: Atomic write new item + clear draft
+    Note right of Server: Agent is untouched!
+    Server-->>Pane: Updated snapshot (Toast: "Idea parked!")
+
+    Note over User,Agent: Phase 2 — User Is Ready to Send Idea(s) to Antigravity
+    Agent-->>User: Finishes current task (Idle)
+    alt Single or Batch "Send Here" / "New Chat"
+        User->>Pane: Clicks "Send Here" (or selects multiple -> "Send (N)")
+        Pane->>Agent: app.sendMessage({ role: "user", content })
+        Pane->>Server: app_set_status({ ids, status: "done", incrementLaunch: true })
+        Server->>Disk: Mark item(s) done & increment launchCount
+        Server-->>Pane: Refresh Parked / Done counts
+    else Attach as Context to Next Message
+        User->>Pane: Clicks "Attach" on one or more ideas
+        Pane->>Agent: app.updateModelContext({ content })
+        User->>Agent: Sends custom chat message with attached context
+    end

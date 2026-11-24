@@ -1,0 +1,31 @@
+stateDiagram-v2
+    [*] --> EmptyComposer
+
+    EmptyComposer --> DraftSaved: User types in Side Pane (450ms auto-save)
+    DraftSaved --> DraftSaved: Continued typing or tab switch recovery
+    DraftSaved --> EmptyComposer: User clears input
+
+    DraftSaved --> Parked: "+ Park Idea" or Ctrl+Enter (app_save_item)
+    EmptyComposer --> Parked: Agent calls park_prompt from chat
+
+    state Parked {
+        [*] --> NormalPriority
+        NormalPriority --> HighPriority: Set priority = high
+        NormalPriority --> LowPriority: Set priority = low
+        HighPriority --> PinnedTop: Toggle pin = true
+        NormalPriority --> PinnedTop: Toggle pin = true
+        LowPriority --> PinnedTop: Toggle pin = true
+    }
+
+    Parked --> AttachedContext: Toggle "Attach" (updateModelContext)
+    AttachedContext --> Parked: Detach or Clear
+
+    Parked --> BatchSelected: Check multi-select box
+    BatchSelected --> Parked: Uncheck
+
+    Parked --> CompletedDone: "Send Here" / "New Chat" (auto-mark done) or "Done"
+    BatchSelected --> CompletedDone: "Send (N)" or Batch "Done"
+
+    CompletedDone --> Parked: Click "Reopen"
+    Parked --> [*]: Click "Delete" (app_delete_item)
+    CompletedDone --> [*]: Click "Delete" or "Clear Done"

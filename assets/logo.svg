@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none">
+  <defs>
+    <linearGradient id="plBg" x1="28" y1="28" x2="228" y2="228" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0EA5E9"/>
+      <stop offset="55%" stop-color="#6366F1"/>
+      <stop offset="100%" stop-color="#8B5CF6"/>
+    </linearGradient>
+    <linearGradient id="plAccent" x1="150" y1="44" x2="216" y2="110" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FDE047"/>
+      <stop offset="100%" stop-color="#F59E0B"/>
+    </linearGradient>
+  </defs>
+  <!-- 12.5% outer margin (32px) baked in per Antigravity plugin logo spec -->
+  <rect x="32" y="32" width="192" height="192" rx="44" fill="url(#plBg)"/>
+  <rect x="38" y="38" width="180" height="180" rx="38" stroke="#FFFFFF" stroke-opacity="0.28" stroke-width="4"/>
+  <!-- Bold Parking 'P' glyph -->
+  <path d="M84 182V76H132C155.2 76 171 90.4 171 112.5C171 134.6 155.2 149 132 149H108V182H84ZM108 128H130.5C141.8 128 148.5 121.8 148.5 112.5C148.5 103.2 141.8 97 130.5 97H108V128Z" fill="#FFFFFF"/>
+  <!-- Parked prompt lines indicator -->
+  <rect x="122" y="162" width="62" height="9" rx="4.5" fill="#E0F2FE" fill-opacity="0.92"/>
+  <rect x="122" y="177" width="44" height="9" rx="4.5" fill="#E0F2FE" fill-opacity="0.72"/>
+  <!-- Spark star top-right -->
+  <path d="M188 52L193.2 66.8L208 72L193.2 77.2L188 92L182.8 77.2L168 72L182.8 66.8L188 52Z" fill="url(#plAccent)"/>
+</svg>

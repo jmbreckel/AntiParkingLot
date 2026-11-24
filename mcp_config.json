@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "parking-lot": {
+      "command": "node",
+      "args": [
+        "${PLUGIN_ROOT}/server/index.mjs"
+      ]
+    }
+  }
+}

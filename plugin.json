@@ -1,0 +1,13 @@
+{
+  "name": "anti-parking-lot",
+  "displayName": "Prompt Parking Lot",
+  "version": "1.0.0",
+  "repository": "https://github.com/jmbreckel/AnitParkingLot.git",
+  "description": "Park, tag, prioritize, and launch follow-up prompts across conversations and workspaces from a live Side-Pane / Sidebar UI or chat.",
+  "logo": "assets/logo.svg",
+  "suggestedPrompts": [
+    "Open my Prompt Parking Lot",
+    "Park this prompt for later: Review error handling and add regression tests",
+    "Show my parked prompts and help me pick what to tackle next"
+  ]
+}
