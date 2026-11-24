@@ -83,3 +83,8 @@ npm test                 # Run end-to-end MCP server, voice metadata & UI verifi
 npm run install:global   # Build and register globally in Antigravity
 npm run uninstall:global # Remove global registration (preserves saved ideas)
 ```
+
+## Contributing & License
+
+- Contributions, bug reports, and feature requests are welcome — see [CONTRIBUTING.md](./CONTRIBUTING.md) and [CHANGELOG.md](./CHANGELOG.md).
+- Licensed under the [MIT License](./LICENSE).

@@ -2,6 +2,11 @@
   "name": "anti-parking-lot",
   "displayName": "Prompt Parking Lot",
   "version": "1.0.0",
+  "author": {
+    "name": "jmbreckel",
+    "url": "https://github.com/jmbreckel"
+  },
+  "homepage": "https://github.com/jmbreckel/AnitParkingLot",
   "repository": "https://github.com/jmbreckel/AnitParkingLot.git",
   "description": "Park, tag, prioritize, and launch follow-up prompts across conversations and workspaces from a live Side-Pane / Sidebar UI or chat.",
   "logo": "assets/logo.svg",

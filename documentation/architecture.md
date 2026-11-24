@@ -91,4 +91,4 @@ _Source: [`diagrams/04-build-and-discovery-pipeline.mmd`](./diagrams/04-build-an
 
 - **Single-File UI Bundle (`scripts/build.mjs`):** Bundles `ui/app.js` and `@modelcontextprotocol/ext-apps` via `esbuild` (`format: "esm"`, `minify: true`) and inlines the resulting `<script type="module">` directly into `ui/template.html` to produce `dist/app.html`.
 - **4x Resolution Diagram Renderer (`scripts/render-diagrams.mjs`):** Renders every `documentation/diagrams/*.mmd` source via headless Chromium + `mermaid` at `deviceScaleFactor: 4` into tightly cropped, high-DPI `.png` diagrams.
-- **Zero-Copy Global Registration (`~/.gemini/config/plugins.json`):** Points Antigravity's plugin loader directly at `C:/Users/<user>/Repo_Pers/github` with `"include_only": ["AntiParkingLot"]`, making the plugin globally active across every workspace.
+- **Zero-Copy Global Registration (`~/.gemini/config/plugins.json`):** Running `npm run install:global` points Antigravity's plugin loader at the repository's parent directory (`<path-to-parent-folder>`) with `"include_only": ["AntiParkingLot"]`, making the plugin globally active across every workspace.
