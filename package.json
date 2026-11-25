@@ -1,12 +1,12 @@
 {
   "name": "anti-parking-lot",
-  "version": "1.0.0",
-  "description": "Antigravity Prompt Parking Lot plugin & Side-Pane MCP App UI for parking ideas while Antigravity works and sending them when ready.",
+  "version": "1.1.0",
+  "description": "Antigravity Prompt Parking Lot plugin & Side-Pane MCP App UI for parking ideas, voice dictations, and screenshots while Antigravity works and sending them when ready.",
   "license": "MIT",
   "author": "jmbreckel",
-  "homepage": "https://github.com/jmbreckel/AnitParkingLot#readme",
+  "homepage": "https://github.com/jmbreckel/AntiParkingLot#readme",
   "bugs": {
-    "url": "https://github.com/jmbreckel/AnitParkingLot/issues"
+    "url": "https://github.com/jmbreckel/AntiParkingLot/issues"
   },
   "keywords": [
     "antigravity",
@@ -23,7 +23,7 @@
   "private": true,
   "repository": {
     "type": "git",
-    "url": "https://github.com/jmbreckel/AnitParkingLot.git"
+    "url": "https://github.com/jmbreckel/AntiParkingLot.git"
   },
   "scripts": {
     "build": "node scripts/build.mjs",

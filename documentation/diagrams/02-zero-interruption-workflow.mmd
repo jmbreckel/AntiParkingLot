@@ -4,7 +4,7 @@ sequenceDiagram
     participant Pane as Side-Pane UI (app.html)
     participant Server as MCP Server (index.mjs)
     participant Voice as Voice Engine (voice.mjs)
-    participant Disk as parking_lot.json
+    participant Disk as parking_lot.json + screenshots/
     participant Agent as Antigravity Chat Agent
 
     Note over User,Agent: Phase 1 — Antigravity Is Actively Working (Do Not Interrupt)
@@ -14,6 +14,13 @@ sequenceDiagram
     Server->>Disk: Read items + saved draft
     Disk-->>Server: Snapshot JSON
     Server-->>Pane: Render parked ideas & restore unsent draft
+
+    opt Paste / Drop / Pick Screenshot ("Ctrl+V" or "📷 Image")
+        User->>Pane: Pastes snip (Ctrl+V) or drops image
+        Pane->>Server: app_upload_screenshot({ dataUrl, thumbDataUrl })
+        Server->>Disk: Write image to screenshots/ss_xxxx.png
+        Server-->>Pane: Render thumbnail & auto-save draft
+    end
 
     opt Voice-to-Text Dictation ("🎤 Voice" or Alt+V)
         User->>Pane: Clicks "🎤 Voice" and speaks idea

@@ -1,6 +1,6 @@
 # User Guide
 
-**Prompt Parking Lot** (`AntiParkingLot`) gives you a calm, persistent place to jot down or speak ideas while Antigravity is working so you never lose a train of thought or interrupt an active task.
+**Prompt Parking Lot** (`AntiParkingLot`) gives you a calm, persistent place to jot down, speak, or screenshot ideas while Antigravity is working so you never lose a train of thought or interrupt an active task.
 
 ---
 
@@ -19,14 +19,15 @@ You can open **Parking Lot** in three ways:
 ---
 
 
-## 2. Typing or Speaking Ideas Without Interrupting Antigravity
+## 2. Typing, Speaking, or Attaching Screenshots Without Interrupting Antigravity
 
 Once the Side Pane is open:
 
-1. **Type or Dictate with Voice-to-Text (`🎤 Voice`):**
+1. **Type, Dictate (`🎤 Voice`), or Paste Screenshots (`📷 Image` / `Ctrl+V`):**
+   - **Screenshots (`Ctrl+V`, Drag & Drop, or `📷 Image`):** Take a screenshot (`Win+Shift+S` on Windows) and press **`Ctrl+V`**, drag & drop image files onto the composer (or an active edit card), or click **📷 Image**. Thumbnail previews appear immediately in the composer; click any thumbnail to zoom full-size in the Lightbox (`Esc` to close, **📋 Copy Path** to copy the disk path). You can park screenshots alongside text or on their own.
    - **In-App Voice Button (`🎤 Voice` or `Alt+V`):** Click **🎤 Voice** in the composer row and speak naturally. Your speech is transcribed directly into text inside the Parking Lot composer (using Windows Neural Speech Recognition with automatic offline `System.Speech` fallback—and browser Web Speech API fallback on macOS/Linux) without touching the active chat agent. Click **⏹ Stop** (or press `Alt+V` again) when finished.
    - **OS Voice Typing (`Win+H` / `Fn+Fn`):** Because the composer is a native `<textarea>`, Windows Voice Typing (`Win+H`) and macOS Dictation also stream punctuated speech directly into the box anytime.
-   - **Auto-Saved Drafts:** As you type or dictate, your unsent draft is saved locally after 450 ms (`Draft saved`). If you close the pane or switch tabs mid-thought, your text is restored automatically when you return.
+   - **Auto-Saved Drafts:** As you type, dictate, or attach screenshots, your unsent draft is saved locally after 450 ms (`Draft saved`). If you close the pane or switch tabs mid-thought, your text and screenshots are restored automatically when you return.
 1. _(Optional)_ Add metadata before parking:
    - **Project:** Tag with a workspace/project name (autocomplete suggests existing project tags).
    - **Priority:** `🔥 High`, `⚡ Normal` (default), or `🧊 Low`.
@@ -42,10 +43,10 @@ When Antigravity finishes its current task (or whenever you want to spin off a p
 
 | Action          | Behavior                                                                                                                                                                          |
 | :-------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **▶ Send Here** | Sends the parked idea directly into your **current conversation** (including any context note). Automatically marks the card **Done** when _Mark done on send_ is checked.        |
-| **↗ New Chat**  | Starts a **brand-new conversation** in the current project with that idea immediately—great for launching an independent task even while your current conversation is still busy! |
-| **📎 Attach**   | Attaches one or more parked ideas as background context to your **next** chat message so you can type extra instructions in the main chat input.                                  |
-| **📋 Copy**     | Copies the formatted prompt text to your clipboard.                                                                                                                               |
+| **▶ Send Here** | Sends the parked idea directly into your **current conversation** (including any context note and attached screenshot file paths so Antigravity inspects the images). Automatically marks the card **Done** when _Mark done on send_ is checked. |
+| **↗ New Chat**  | Starts a **brand-new conversation** in the current project with that idea (and any attached screenshots) immediately—great for launching an independent task even while your current conversation is still busy! |
+| **📎 Attach**   | Attaches one or more parked ideas (and screenshot paths) as background context to your **next** chat message so you can type extra instructions in the main chat input. |
+| **📋 Copy**     | Copies the formatted prompt text (including screenshot paths) to your clipboard. |
 
 ### Combining Multiple Ideas into One Prompt
 
@@ -68,6 +69,21 @@ _Source: [`diagrams/03-data-model-and-lifecycle.mmd`](./diagrams/03-data-model-a
 
 - **Reorder (`↑` / `↓`):** Move parked items up or down manually.
 - **Pin (`📌`):** Pinned items always stay at the top of the **Parked** list above unpinned items.
-- **Edit (`✎`):** Refine the prompt text, project tag, priority, or notes inline before sending.
-- **Tabs & Filters:** Switch between **Parked**, **Done**, and **All**, filter by **Project**, or instant-search across titles, prompt bodies, notes, and tags.
-- **Reopen / Clear Done:** Reopen any completed item from the **Done** tab (`↩ Reopen`), or click **Clear Done** to prune finished items.
+- **Edit (`✎`):** Refine the prompt text, project tag, priority, notes, or attached screenshots inline before sending.
+- **Tabs & Filters:** Switch between **Parked**, **Done**, and **All**, filter by **Project**, or instant-search across titles, prompt bodies, notes, tags, and screenshot filenames.
+- **Reopen / Clear Done:** Reopen any completed item from the **Done** tab (`↩ Reopen`), or click **Clear Done** to prune finished items (unreferenced screenshot files are cleaned up automatically).
+
+---
+
+## 5. In-App Help & Keyboard Shortcuts
+
+Click **`? Help`** in the top-right header bar (or press **`F1`** or **`?`** when not typing in an input) to open the built-in **Application Help** modal inside the panel.
+
+| Shortcut | Action |
+| :--- | :--- |
+| `Ctrl+Enter` (`Cmd+Enter` on Mac) | Park the current idea |
+| `Ctrl+V` | Paste clipboard screenshot into composer or active inline edit box |
+| `Alt+V` | Start or stop built-in voice-to-text dictation |
+| `Win+H` (`Fn+Fn` on Mac) | Start OS-level voice typing inside any text field |
+| `F1` or `?` | Toggle the built-in Application Help dialog |
+| `Esc` | Close the Lightbox preview or Help dialog |

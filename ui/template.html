@@ -128,6 +128,13 @@
       box-shadow: 0 0 0 2px rgba(244, 63, 94, 0.18);
     }
 
+    .composer.dragover,
+    .edit-box.dragover {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.25);
+      background: rgba(56, 189, 248, 0.06);
+    }
+
     .composer textarea,
     .edit-box textarea {
       width: 100%;
@@ -226,6 +233,12 @@
       background: rgba(56, 189, 248, 0.12);
       border-color: rgba(56, 189, 248, 0.42);
       color: #7dd3fc;
+    }
+
+    .btn-photo {
+      background: rgba(168, 85, 247, 0.13);
+      border-color: rgba(192, 132, 252, 0.42);
+      color: #d8b4fe;
     }
 
     .btn-voice.active {
@@ -401,6 +414,224 @@
       background: rgba(250, 204, 21, 0.13);
     }
 
+    .pill-ss {
+      color: #d8b4fe;
+      border-color: rgba(192, 132, 252, 0.45);
+      background: rgba(168, 85, 247, 0.14);
+    }
+
+    .ss-strip {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      flex-wrap: wrap;
+      padding: 2px 0;
+    }
+
+    .ss-thumb-wrap {
+      position: relative;
+      width: 72px;
+      height: 54px;
+      border-radius: 7px;
+      overflow: hidden;
+      border: 1px solid var(--border-primary);
+      background: var(--bg-primary);
+      cursor: zoom-in;
+      flex-shrink: 0;
+      transition: border-color 0.14s, transform 0.1s;
+    }
+
+    .ss-thumb-wrap:hover {
+      border-color: var(--accent);
+      transform: translateY(-1px);
+    }
+
+    .ss-thumb-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .ss-thumb-fallback {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      color: var(--text-secondary);
+    }
+
+    .ss-remove-btn {
+      position: absolute;
+      top: 3px;
+      right: 3px;
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      border: 1px solid rgba(251, 113, 133, 0.55);
+      background: rgba(15, 23, 42, 0.88);
+      color: #fda4af;
+      font-size: 10px;
+      font-weight: 700;
+      line-height: 1;
+      padding: 0;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .ss-remove-btn:hover {
+      background: rgba(244, 63, 94, 0.85);
+      color: #fff;
+    }
+
+    .lightbox {
+      position: fixed;
+      inset: 0;
+      background: rgba(2, 6, 23, 0.88);
+      z-index: 1000;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      padding: 14px;
+    }
+
+    .lightbox img {
+      max-width: 96%;
+      max-height: calc(100vh - 76px);
+      border-radius: 8px;
+      border: 1px solid var(--border-primary);
+      object-fit: contain;
+      background: #020617;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+    }
+
+    .lightbox-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+      color: var(--text-secondary);
+      font-size: 11.5px;
+    }
+
+    .help-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(2, 6, 23, 0.82);
+      z-index: 1001;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 12px;
+    }
+
+    .help-dialog {
+      width: 100%;
+      max-width: 540px;
+      max-height: calc(100vh - 24px);
+      overflow-y: auto;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-primary);
+      border-radius: 12px;
+      padding: 13px 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 11px;
+      box-shadow: 0 20px 48px rgba(0, 0, 0, 0.55);
+    }
+
+    .help-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-primary);
+    }
+
+    .help-title {
+      font-size: 13.5px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .help-ver {
+      font-size: 10.5px;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 999px;
+      background: rgba(56, 189, 248, 0.14);
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      color: var(--accent);
+    }
+
+    .help-sec {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .help-sec h4 {
+      margin: 0;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .help-sec p,
+    .help-sec li {
+      margin: 0;
+      font-size: 11.8px;
+      color: var(--text-secondary);
+      line-height: 1.48;
+    }
+
+    .help-sec ul {
+      margin: 0;
+      padding-left: 17px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .help-sec b {
+      color: var(--text-primary);
+    }
+
+    .kbd-grid {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 4px 10px;
+      align-items: center;
+      font-size: 11.5px;
+      color: var(--text-secondary);
+      background: var(--bg-primary);
+      border: 1px solid var(--border-primary);
+      border-radius: 8px;
+      padding: 7px 10px;
+    }
+
+    kbd {
+      display: inline-block;
+      padding: 1px 5px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 10.5px;
+      font-weight: 600;
+      color: var(--text-primary);
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-primary);
+      border-radius: 4px;
+    }
+
     .prompt-body {
       white-space: pre-wrap;
       word-break: break-word;
@@ -513,11 +744,12 @@
           Mark done on send
         </label>
         <button type="button" class="btn btn-icon" id="btn-refresh" title="Reload from disk">↻</button>
+        <button type="button" class="btn btn-icon" id="btn-help" title="Application Help & Keyboard Shortcuts (F1 or ?)">? Help</button>
       </div>
     </div>
 
     <div class="safe-note">
-      <span>🛡️ Type or speak ideas anytime while Antigravity works — nothing sends until you click <b>Send</b>.</span>
+      <span>🛡️ Type, speak, or paste screenshots (<b>Ctrl+V</b>) while Antigravity works — nothing sends until you click <b>Send</b>.</span>
       <span class="draft-indicator" id="draft-status"></span>
     </div>
 
@@ -528,8 +760,9 @@
 
     <!-- Quick Park Composer -->
     <div class="composer" id="composer-box">
-      <textarea id="input-prompt" placeholder="Type or click 🎤 Voice to dictate an idea while Antigravity works… (Ctrl+Enter to park)"></textarea>
+      <textarea id="input-prompt" placeholder="Type, click 🎤 Voice, or paste/drop a screenshot (Ctrl+V)… (Ctrl+Enter to park)"></textarea>
       <div class="voice-live-preview" id="voice-preview"></div>
+      <div class="ss-strip" id="composer-screenshots" style="display: none;"></div>
       <div class="composer-row">
         <input type="text" id="input-project" class="input-sm" list="project-datalist" placeholder="Project (optional)" style="flex: 1 1 110px; min-width: 100px;" />
         <datalist id="project-datalist"></datalist>
@@ -542,6 +775,8 @@
         <label class="chk-label" title="Pin to top">
           <input type="checkbox" id="input-pinned" /> 📌
         </label>
+        <input type="file" id="input-screenshot" accept="image/*" multiple style="display: none;" />
+        <button type="button" class="btn btn-photo" id="btn-screenshot" title="Attach screenshot or image (or paste with Ctrl+V / drag & drop)">📷 Image</button>
         <button type="button" class="btn btn-voice" id="btn-voice" title="Dictate idea with voice-to-text (Alt+V, or Win+H)">🎤 Voice</button>
         <button type="button" class="btn btn-primary" id="btn-park">+ Park Idea</button>
       </div>
@@ -577,6 +812,69 @@
 
     <!-- Cards Container -->
     <div class="cards" id="cards-list"></div>
+  </div>
+
+  <div class="help-overlay" id="help-modal" role="dialog" aria-modal="true" aria-labelledby="help-dialog-title">
+    <div class="help-dialog">
+      <div class="help-head">
+        <div class="help-title" id="help-dialog-title">
+          <span>Prompt Parking Lot — Help</span>
+          <span class="help-ver">v1.1.0</span>
+        </div>
+        <button type="button" class="btn btn-icon" id="btn-help-close" title="Close Help (Esc)">✕</button>
+      </div>
+
+      <div class="help-sec">
+        <h4>🛡️ Zero-Interruption Scratchpad</h4>
+        <p>
+          Capture follow-up ideas anytime while Antigravity is busy working. Everything you type, speak, or paste stays local on disk and <b>never interrupts or queues behind an active agent run</b> until you click a Send button. Unsent drafts and screenshots auto-save after 450 ms.
+        </p>
+      </div>
+
+      <div class="help-sec">
+        <h4>📷 Screenshots &amp; 🎤 Voice Dictation</h4>
+        <ul>
+          <li><b>Screenshots:</b> Press <kbd>Ctrl</kbd>+<kbd>V</kbd> right after taking a snip (<kbd>Win</kbd>+<kbd>Shift</kbd>+<kbd>S</kbd>), drag &amp; drop images onto the composer (or an active edit card), or click <b>📷 Image</b>. Click any thumbnail to inspect full-size. You can park a screenshot with or without text.</li>
+          <li><b>Voice Dictation:</b> Click <b>🎤 Voice</b> (<kbd>Alt</kbd>+<kbd>V</kbd>) for built-in neural/offline speech-to-text, or press <kbd>Win</kbd>+<kbd>H</kbd> (<kbd>Fn</kbd><kbd>Fn</kbd> on Mac) for OS dictation.</li>
+        </ul>
+      </div>
+
+      <div class="help-sec">
+        <h4>🚀 Sending Ideas When Ready (Side Pane)</h4>
+        <ul>
+          <li><b>▶ Send Here:</b> Sends the prompt (plus notes &amp; attached screenshot paths) straight into your <b>current conversation</b>.</li>
+          <li><b>↗ New Chat:</b> Starts a <b>separate conversation</b> in this project immediately—even while your current chat is still busy.</li>
+          <li><b>📎 Attach:</b> Attaches one or more parked ideas as context onto your <b>next chat message</b>.</li>
+          <li><b>Batch Combine:</b> Check multiple cards to merge and send them together as a numbered prompt (<b>▶ Send (N)</b> / <b>↗ New Chat (N)</b>).</li>
+        </ul>
+      </div>
+
+      <div class="help-sec">
+        <h4>⌨️ Keyboard Shortcuts</h4>
+        <div class="kbd-grid">
+          <span><kbd>Ctrl</kbd>+<kbd>Enter</kbd></span><span>Park current idea (<kbd>Cmd</kbd>+<kbd>Enter</kbd> on Mac)</span>
+          <span><kbd>Ctrl</kbd>+<kbd>V</kbd></span><span>Paste clipboard screenshot into composer or edit box</span>
+          <span><kbd>Alt</kbd>+<kbd>V</kbd></span><span>Start / stop voice dictation</span>
+          <span><kbd>F1</kbd> or <kbd>?</kbd></span><span>Toggle this Help window (<kbd>Esc</kbd> to close)</span>
+        </div>
+      </div>
+
+      <div class="help-sec">
+        <h4>💾 Local Data Storage</h4>
+        <p>
+          Stored locally in <code>~/.gemini/config/plugin-data/anti-parking-lot/</code> (<code>parking_lot.json</code> + <code>screenshots/</code>). Deleting an idea automatically removes its unreferenced screenshot files.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="lightbox" id="lightbox-modal">
+    <img id="lightbox-img" alt="Screenshot preview" />
+    <div class="lightbox-bar">
+      <span id="lightbox-caption"></span>
+      <button type="button" class="btn" id="btn-lightbox-path">📋 Copy Path</button>
+      <button type="button" class="btn btn-danger" id="btn-lightbox-close">✕ Close</button>
+    </div>
   </div>
 
   <div class="toast" id="toast"></div>

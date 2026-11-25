@@ -6,7 +6,7 @@ Thanks for your interest in contributing to **AntiParkingLot** (*Prompt Parking 
 
 1. Fork and clone the repository:
    ```powershell
-   git clone https://github.com/jmbreckel/AnitParkingLot.git AntiParkingLot
+   git clone https://github.com/jmbreckel/AntiParkingLot.git
    cd AntiParkingLot
    npm run install:global
    ```
@@ -26,7 +26,7 @@ Thanks for your interest in contributing to **AntiParkingLot** (*Prompt Parking 
 
 ## Submitting Changes
 
-- **Bug reports & feature requests:** Open an issue at <https://github.com/jmbreckel/AnitParkingLot/issues> with your OS, Node.js version, and steps to reproduce.
+- **Bug reports & feature requests:** Open an issue at <https://github.com/jmbreckel/AntiParkingLot/issues> with your OS, Node.js version, and steps to reproduce.
 - **Pull requests:** Keep PRs focused, ensure `npm test` passes, and include any updated `dist/app.html` or diagram PNGs if relevant.
 
 ## License

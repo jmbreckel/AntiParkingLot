@@ -2,7 +2,7 @@
 
 **AntiParkingLot** is engineered around a strict UX requirement:
 
-> _While Antigravity is busy executing a task, the user needs an always-ready scratchpad to type or voice-dictate ideas so they aren't forgotten—without interrupting or queueing behind the active agent run—and then send one or more parked ideas to Antigravity when ready._
+> _While Antigravity is busy executing a task, the user needs an always-ready scratchpad to type, voice-dictate, or paste screenshots of ideas so they aren't forgotten—without interrupting or queueing behind the active agent run—and then send one or more parked ideas to Antigravity when ready._
 
 ---
 
@@ -35,6 +35,7 @@ flowchart TB
     subgraph OS["Local OS & Persistent Storage"]
         Mic["Windows Neural / Offline Speech-to-Text Mic"]
         JSONFile["~/.gemini/config/plugin-data/anti-parking-lot/parking_lot.json"]
+        ShotsDir["~/.gemini/config/plugin-data/anti-parking-lot/screenshots/"]
         GlobalReg["~/.gemini/config/plugins.json"]
     end
 
@@ -47,8 +48,8 @@ flowchart TB
     UIApp -->|"Renders inside"| SidePane
     UIApp -->|"Renders inside"| Sidebar
 
-    SidePane -->|"Direct app_* & voice_* calls (Zero Agent Interruption)"| MCPServer
-    Sidebar -->|"Direct app_* & voice_* calls (Zero Agent Interruption)"| MCPServer
+    SidePane -->|"Direct app_* / voice / screenshot calls"| MCPServer
+    Sidebar -->|"Direct app_* / voice / screenshot calls"| MCPServer
     SidePane -.->|"sendMessage / updateModelContext (Only When User Clicks Send)"| ChatAgent
     ChatAgent <-->|"park_prompt / list_parked_prompts"| MCPServer
 
@@ -56,6 +57,7 @@ flowchart TB
     Voice <-->|"Captures & transcribes voice"| Mic
     MCPServer <-->|"Atomic temp-file + rename"| Store
     Store <-->|"Reads & writes JSON + Draft"| JSONFile
+    Store <-->|"Saves & cleans up image files"| ShotsDir
 ```
 
 ### Key Architectural Layers
@@ -64,10 +66,13 @@ flowchart TB
    - Declares the `anti-parking-lot` plugin metadata, square SVG icon (`assets/logo.svg`), suggested prompts, and stdio Node.js MCP server (`server/index.mjs`).
 2. **Host-Integrated MCP App UI (`ui/template.html`, `ui/app.js` -> `dist/app.html`):**
    - Uses `@modelcontextprotocol/ext-apps` (`App`, `applyDocumentTheme`, `applyHostStyleVariables`) to inherit Antigravity's live dark/light theme tokens automatically.
-   - Exposes both `aux_pane` (right-hand **Side Pane `+` menu**) and `global` (**Left Sidebar** full-page view) entrypoints via `_meta["com.google.antigravity/ui"]`.
+   - Exposes both `aux_pane` (right-hand **Side Pane `+` menu**) and `global` (**Left Sidebar** full-page view) entrypoints via `_meta["com.google.antigravity/ui"]`, plus built-in `? Help` (`F1` / `?`) and a full-resolution screenshot Lightbox.
 3. **App-Scoped Tool Channel (`visibility: ["app"]`):**
-   - All Side-Pane CRUD, draft auto-save, and voice dictation operations (`app_get_state`, `app_save_draft`, `app_save_item`, `app_set_status`, `app_reorder_item`, `app_delete_item`, `app_voice_*`) are marked `_meta: { ui: { visibility: ["app"] } }`.
+   - All Side-Pane CRUD, draft auto-save, voice dictation, and screenshot operations (`app_get_state`, `app_save_draft`, `app_save_item`, `app_set_status`, `app_reorder_item`, `app_delete_item`, `app_voice_*`, `app_*_screenshot`) are marked `_meta: { ui: { visibility: ["app"] } }`.
    - These calls travel directly between the Side-Pane iframe and the local Node MCP process over JSON-RPC stdio—**completely bypassing the LLM conversation loop** while Antigravity is busy.
+4. **Screenshot Storage & Thumbnail Architecture (`server/store.mjs` + `ui/app.js`):**
+   - Pasted (`Ctrl+V`), dropped, or selected images generate compact client-side WebP/JPEG thumbnails (`<= 220×160`) stored inline for instant card rendering while keeping MCP `CallToolResult` payloads well under Antigravity's 1 MiB trajectory cap.
+   - Full-resolution images are written atomically under `~/.gemini/config/plugin-data/anti-parking-lot/screenshots/`, loaded on-demand in the Lightbox via `app_get_screenshot`, included as file paths when dispatched to Antigravity, and garbage-collected automatically when unreferenced.
 5. **Hybrid Speech-to-Text Engine (`server/voice.mjs` + `ui/app.js`):**
    - Sandboxed Electron iframes frequently restrict `webkitSpeechRecognition` or `getUserMedia`. `VoiceDictationManager` bypasses iframe limitations cleanly on Windows by driving WinRT `Windows.Media.SpeechRecognition.SpeechRecognizer` (neural/cloud speech with automatic punctuation) with an automatic offline fallback to `.NET System.Speech.Recognition.SpeechRecognitionEngine` (`DictationGrammar`), plus Web Speech API fallback on macOS/Linux.
 6. **Atomic Persistence (`server/store.mjs`):**

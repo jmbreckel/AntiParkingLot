@@ -14,6 +14,9 @@ const state = {
   projectFilter: '',
   search: '',
   editingId: null,
+  editingScreenshots: [],
+  composerScreenshots: [],
+  fullImageCache: new Map(),
   selectedIds: new Set(),
   attachedIds: new Set(),
   draftHydrated: false,
@@ -135,6 +138,11 @@ function hydrateDraftOnce(draft) {
   }
   if (pinEl && draft.pinned) {
     pinEl.checked = Boolean(draft.pinned);
+  }
+  if (Array.isArray(draft.screenshots) && draft.screenshots.length > 0 && state.composerScreenshots.length === 0) {
+    state.composerScreenshots = draft.screenshots;
+    renderComposerScreenshots();
+    setDraftStatus('Draft restored');
   }
 }
 
@@ -307,6 +315,218 @@ async function toggleVoiceDictation() {
 }
 
 // ---------------------------------------------------------------------------
+// Screenshot Capture (Paste / Drag-and-Drop / File Picker + Lightbox Preview)
+// ---------------------------------------------------------------------------
+
+function readBlobAsDataUrl(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ''));
+    reader.onerror = () => reject(new Error('Failed to read image file'));
+    reader.readAsDataURL(blob);
+  });
+}
+
+function measureAndMakeThumbnail(dataUrl) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const width = img.naturalWidth || img.width || 0;
+      const height = img.naturalHeight || img.height || 0;
+      const maxW = 220;
+      const maxH = 160;
+      const scale = Math.min(1, maxW / Math.max(1, width), maxH / Math.max(1, height));
+      const tw = Math.max(1, Math.round(width * scale));
+      const th = Math.max(1, Math.round(height * scale));
+      let thumbDataUrl = null;
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = tw;
+        canvas.height = th;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, tw, th);
+          thumbDataUrl = canvas.toDataURL('image/webp', 0.8);
+          if (!thumbDataUrl.startsWith('data:image/webp')) {
+            thumbDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+          }
+        }
+      } catch {
+        // Fallback handled on server if small
+      }
+      resolve({ width, height, thumbDataUrl });
+    };
+    img.onerror = () => resolve({ width: null, height: null, thumbDataUrl: null });
+    img.src = dataUrl;
+  });
+}
+
+let activeLightboxPath = '';
+
+function closeLightbox() {
+  const modal = document.getElementById('lightbox-modal');
+  const img = document.getElementById('lightbox-img');
+  if (modal) modal.style.display = 'none';
+  if (img) img.removeAttribute('src');
+  activeLightboxPath = '';
+}
+
+function toggleHelpModal(forceOpen) {
+  const modal = document.getElementById('help-modal');
+  if (!modal) return;
+  const isOpen = modal.style.display === 'flex';
+  const next = typeof forceOpen === 'boolean' ? forceOpen : !isOpen;
+  modal.style.display = next ? 'flex' : 'none';
+}
+
+async function openLightbox(ss) {
+  if (!ss) return;
+  const modal = document.getElementById('lightbox-modal');
+  const img = document.getElementById('lightbox-img');
+  const cap = document.getElementById('lightbox-caption');
+  if (!modal || !img) return;
+
+  activeLightboxPath = ss.filePath || '';
+  const dims = ss.width && ss.height ? ` (${ss.width}×${ss.height})` : '';
+  if (cap) cap.textContent = `${ss.name || ss.filename || 'Screenshot'}${dims}`;
+
+  const cached = state.fullImageCache.get(ss.id);
+  if (cached) {
+    img.src = cached;
+    modal.style.display = 'flex';
+    return;
+  }
+
+  if (ss.thumbDataUrl) {
+    img.src = ss.thumbDataUrl;
+  }
+  modal.style.display = 'flex';
+
+  try {
+    const res = await callServer('app_get_screenshot', { id: ss.id });
+    const full = res?.structuredContent?.screenshot;
+    if (full?.dataUrl) {
+      state.fullImageCache.set(ss.id, full.dataUrl);
+      if (full.filePath) activeLightboxPath = full.filePath;
+      img.src = full.dataUrl;
+    }
+  } catch (err) {
+    showToast(`Could not load full image: ${err?.message || 'not found'}`);
+  }
+}
+
+function buildScreenshotStripNodes(screenshots, onRemove = null) {
+  const frag = document.createDocumentFragment();
+  for (const ss of screenshots) {
+    const wrap = document.createElement('div');
+    wrap.className = 'ss-thumb-wrap';
+    const dims = ss.width && ss.height ? ` · ${ss.width}×${ss.height}` : '';
+    wrap.title = `${ss.name || ss.filename || 'Screenshot'}${dims} (click to zoom)`;
+
+    const src = state.fullImageCache.get(ss.id) || ss.thumbDataUrl;
+    if (src) {
+      const img = document.createElement('img');
+      img.src = src;
+      img.alt = ss.name || 'Screenshot';
+      wrap.appendChild(img);
+    } else {
+      const fb = document.createElement('div');
+      fb.className = 'ss-thumb-fallback';
+      fb.textContent = '📷';
+      wrap.appendChild(fb);
+    }
+
+    wrap.onclick = () => openLightbox(ss);
+
+    if (onRemove) {
+      const rm = document.createElement('button');
+      rm.type = 'button';
+      rm.className = 'ss-remove-btn';
+      rm.title = 'Remove screenshot';
+      rm.textContent = '✕';
+      rm.onclick = (ev) => {
+        ev.stopPropagation();
+        onRemove(ss);
+      };
+      wrap.appendChild(rm);
+    }
+
+    frag.appendChild(wrap);
+  }
+  return frag;
+}
+
+function renderComposerScreenshots() {
+  const strip = document.getElementById('composer-screenshots');
+  if (!strip) return;
+  if (!state.composerScreenshots.length) {
+    strip.style.display = 'none';
+    strip.innerHTML = '';
+    return;
+  }
+  strip.style.display = 'flex';
+  strip.innerHTML = '';
+  strip.appendChild(
+    buildScreenshotStripNodes(state.composerScreenshots, async (ss) => {
+      state.composerScreenshots = state.composerScreenshots.filter((x) => x.id !== ss.id);
+      state.fullImageCache.delete(ss.id);
+      renderComposerScreenshots();
+      scheduleDraftSave();
+      try {
+        await callServer('app_delete_screenshot', { id: ss.id });
+      } catch {
+        // Ignore cleanup errors
+      }
+    })
+  );
+}
+
+async function attachImageFiles(files, target = 'composer') {
+  const imageFiles = [...(files || [])].filter((f) => f && String(f.type || '').startsWith('image/'));
+  if (!imageFiles.length) return;
+
+  setDraftStatus(`Uploading ${imageFiles.length} image${imageFiles.length === 1 ? '' : 's'}…`, true);
+  let added = 0;
+  for (const file of imageFiles) {
+    try {
+      const dataUrl = await readBlobAsDataUrl(file);
+      const { width, height, thumbDataUrl } = await measureAndMakeThumbnail(dataUrl);
+      const name = file.name && file.name !== 'image.png' ? file.name : `screenshot-${new Date().toISOString().slice(11, 19).replace(/:/g, '')}.png`;
+      const res = await callServer('app_upload_screenshot', {
+        dataUrl,
+        name,
+        width,
+        height,
+        thumbDataUrl,
+      });
+      const saved = res?.structuredContent?.screenshot;
+      if (saved) {
+        state.fullImageCache.set(saved.id, dataUrl);
+        if (target === 'edit' && state.editingId) {
+          state.editingScreenshots.push(saved);
+        } else {
+          state.composerScreenshots.push(saved);
+        }
+        added += 1;
+      }
+    } catch (err) {
+      showToast(`⚠️ ${err?.message || 'Failed to attach screenshot'}`);
+    }
+  }
+
+  setDraftStatus('');
+  if (added > 0) {
+    if (target === 'edit' && state.editingId) {
+      render();
+    } else {
+      renderComposerScreenshots();
+      scheduleDraftSave();
+    }
+    showToast(`📷 Attached ${added} screenshot${added === 1 ? '' : 's'}`);
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Clipboard, Context Attachment, and Chat Dispatch
 // ---------------------------------------------------------------------------
 
@@ -325,13 +545,30 @@ async function copyText(text, label = '📋 Copied to clipboard') {
   }
 }
 
+function formatScreenshotsForPrompt(item, indent = '') {
+  const list = Array.isArray(item.screenshots) ? item.screenshots.filter((s) => s?.filePath) : [];
+  if (list.length === 0) return '';
+  if (list.length === 1) {
+    return `\n${indent}Attached screenshot: ${list[0].filePath}`;
+  }
+  return `\n${indent}Attached screenshots:\n` + list.map((s) => `${indent}- ${s.filePath}`).join('\n');
+}
+
 function buildCombinedPrompt(items) {
   if (items.length === 1) {
     const only = items[0];
-    return only.notes ? `${only.prompt}\n\n(Context: ${only.notes})` : only.prompt;
+    const base = only.notes ? `${only.prompt}\n\n(Context: ${only.notes})` : only.prompt;
+    const ssSuffix = formatScreenshotsForPrompt(only);
+    return ssSuffix ? `${base}\n${ssSuffix}` : base;
   }
   return items
-    .map((it, idx) => `${idx + 1}. ${it.prompt}${it.notes ? `\n   - Note: ${it.notes}` : ''}`)
+    .map((it, idx) => {
+      const noteLine = it.notes ? `\n   - Note: ${it.notes}` : '';
+      const ssLines = Array.isArray(it.screenshots) && it.screenshots.length
+        ? it.screenshots.filter((s) => s?.filePath).map((s) => `\n   - Screenshot: ${s.filePath}`).join('')
+        : '';
+      return `${idx + 1}. ${it.prompt}${noteLine}${ssLines}`;
+    })
     .join('\n\n');
 }
 
@@ -355,7 +592,7 @@ async function syncAttachedContext() {
   const textBlock = selected
     .map(
       (it, idx) =>
-        `[Parked Idea #${idx + 1}${it.project ? ` (${it.project})` : ''}]\n${it.prompt}${it.notes ? `\nNotes: ${it.notes}` : ''}`
+        `[Parked Idea #${idx + 1}${it.project ? ` (${it.project})` : ''}]\n${it.prompt}${it.notes ? `\nNotes: ${it.notes}` : ''}${formatScreenshotsForPrompt(it)}`
     )
     .join('\n\n---\n\n');
 
@@ -412,7 +649,10 @@ function getFilteredItems() {
     if (state.tab === 'done' && it.status !== 'done') return false;
     if (wantProj && String(it.project || '').trim().toLowerCase() !== wantProj) return false;
     if (wantSearch) {
-      const hay = `${it.title || ''} ${it.prompt || ''} ${it.notes || ''} ${it.project || ''} ${(it.tags || []).join(' ')}`.toLowerCase();
+      const ssNames = Array.isArray(it.screenshots) && it.screenshots.length
+        ? it.screenshots.map((s) => `${s.name || ''} screenshot image`).join(' ')
+        : '';
+      const hay = `${it.title || ''} ${it.prompt || ''} ${it.notes || ''} ${it.project || ''} ${(it.tags || []).join(' ')} ${ssNames}`.toLowerCase();
       if (!hay.includes(wantSearch)) return false;
     }
     return true;
@@ -520,6 +760,7 @@ function render() {
       card.classList.add('edit-box');
       card.innerHTML = `
         <textarea id="edit-prompt-${item.id}">${escapeHtml(item.prompt)}</textarea>
+        <div class="ss-strip" id="edit-ss-strip-${item.id}" style="display: ${state.editingScreenshots.length ? 'flex' : 'none'};"></div>
         <div class="composer-row">
           <input type="text" id="edit-proj-${item.id}" class="input-sm" list="project-datalist" value="${escapeHtml(item.project || '')}" placeholder="Project" style="flex: 1 1 110px;" />
           <select id="edit-prio-${item.id}">
@@ -528,26 +769,62 @@ function render() {
             <option value="low"${item.priority === 'low' ? ' selected' : ''}>🧊 Low</option>
           </select>
           <input type="text" id="edit-notes-${item.id}" class="input-sm" value="${escapeHtml(item.notes || '')}" placeholder="Notes…" style="flex: 2 1 120px;" />
+          <input type="file" id="edit-file-${item.id}" accept="image/*" multiple style="display: none;" />
+          <button type="button" class="btn btn-photo" data-act="add-edit-ss" title="Add screenshot (or paste/drop)">📷</button>
           <button type="button" class="btn btn-primary" data-act="save-edit">Save</button>
           <button type="button" class="btn" data-act="cancel-edit">Cancel</button>
         </div>
       `;
+      const editStrip = card.querySelector(`#edit-ss-strip-${item.id}`);
+      if (editStrip && state.editingScreenshots.length) {
+        editStrip.appendChild(
+          buildScreenshotStripNodes(state.editingScreenshots, (ss) => {
+            state.editingScreenshots = state.editingScreenshots.filter((x) => x.id !== ss.id);
+            render();
+          })
+        );
+      }
+      const editFileIn = card.querySelector(`#edit-file-${item.id}`);
+      card.querySelector('[data-act="add-edit-ss"]').onclick = () => editFileIn?.click();
+      if (editFileIn) {
+        editFileIn.onchange = async () => {
+          if (editFileIn.files?.length) {
+            await attachImageFiles(editFileIn.files, 'edit');
+            editFileIn.value = '';
+          }
+        };
+      }
+      card.ondragover = (ev) => {
+        ev.preventDefault();
+        card.classList.add('dragover');
+      };
+      card.ondragleave = () => card.classList.remove('dragover');
+      card.ondrop = async (ev) => {
+        ev.preventDefault();
+        card.classList.remove('dragover');
+        if (ev.dataTransfer?.files?.length) {
+          await attachImageFiles(ev.dataTransfer.files, 'edit');
+        }
+      };
       card.querySelector('[data-act="save-edit"]').onclick = async () => {
         const newPrompt = document.getElementById(`edit-prompt-${item.id}`).value.trim();
-        if (!newPrompt) return;
+        if (!newPrompt && state.editingScreenshots.length === 0) return;
         await callServer('app_save_item', {
           id: item.id,
           prompt: newPrompt,
           project: document.getElementById(`edit-proj-${item.id}`).value.trim(),
           priority: document.getElementById(`edit-prio-${item.id}`).value,
           notes: document.getElementById(`edit-notes-${item.id}`).value.trim(),
+          screenshots: state.editingScreenshots,
         });
         state.editingId = null;
+        state.editingScreenshots = [];
         render();
         showToast('Saved changes');
       };
       card.querySelector('[data-act="cancel-edit"]').onclick = () => {
         state.editingId = null;
+        state.editingScreenshots = [];
         render();
       };
       listEl.appendChild(card);
@@ -562,6 +839,8 @@ function render() {
         : '';
     const projBadge = item.project ? `<span class="pill pill-proj">📁 ${escapeHtml(item.project)}</span>` : '';
     const pinBadge = item.pinned ? `<span class="pill pill-pin">📌 Pinned</span>` : '';
+    const ssList = Array.isArray(item.screenshots) ? item.screenshots : [];
+    const ssBadge = ssList.length ? `<span class="pill pill-ss">📷 ${ssList.length}</span>` : '';
     const tagBadges = (item.tags || []).map((t) => `<span class="pill">#${escapeHtml(t)}</span>`).join('');
     const isAttached = state.attachedIds.has(item.id);
 
@@ -569,7 +848,7 @@ function render() {
       <div class="card-head">
         <div class="card-badges">
           <input type="checkbox" class="card-select-chk" data-act="select" title="Select to combine or batch-send multiple ideas"${isSelected ? ' checked' : ''} />
-          ${pinBadge}${prioBadge}${projBadge}${tagBadges}
+          ${pinBadge}${prioBadge}${projBadge}${ssBadge}${tagBadges}
           <span style="font-size: 11px; color: var(--text-tertiary);">${formatRelTime(item.createdAt)}</span>
         </div>
         <div class="action-group">
@@ -585,6 +864,7 @@ function render() {
         </div>
       </div>
       <div class="prompt-body">${escapeHtml(item.prompt)}</div>
+      ${ssList.length ? `<div class="ss-strip" data-role="card-ss-strip"></div>` : ''}
       ${item.notes ? `<div class="notes-line">💡 ${escapeHtml(item.notes)}</div>` : ''}
       <div class="card-foot">
         <div class="action-group">
@@ -650,9 +930,15 @@ function render() {
       }
       render();
     });
+    const cardStrip = card.querySelector('[data-role="card-ss-strip"]');
+    if (cardStrip && ssList.length) {
+      cardStrip.appendChild(buildScreenshotStripNodes(ssList, null));
+    }
+
     bind('[data-act="pin"]', () => callServer('app_set_status', { id: item.id, pinned: !item.pinned }));
     bind('[data-act="edit"]', () => {
       state.editingId = item.id;
+      state.editingScreenshots = Array.isArray(item.screenshots) ? [...item.screenshots] : [];
       render();
     });
     bind('[data-act="delete"]', async () => {
@@ -686,8 +972,9 @@ function scheduleDraftSave() {
         priority: prioInput?.value || 'normal',
         notes: notesInput?.value || '',
         pinned: Boolean(pinInput?.checked),
+        screenshots: state.composerScreenshots,
       });
-      if ((promptInput?.value || '').trim() && !state.voice.active) {
+      if (((promptInput?.value || '').trim() || state.composerScreenshots.length > 0) && !state.voice.active) {
         setDraftStatus('Draft saved');
       }
     } catch {
@@ -699,6 +986,9 @@ function scheduleDraftSave() {
 function bindControls() {
   const parkBtn = document.getElementById('btn-park');
   const voiceBtn = document.getElementById('btn-voice');
+  const ssBtn = document.getElementById('btn-screenshot');
+  const ssInput = document.getElementById('input-screenshot');
+  const composerBox = document.getElementById('composer-box');
   const promptInput = document.getElementById('input-prompt');
   const projInput = document.getElementById('input-project');
   const prioInput = document.getElementById('input-priority');
@@ -710,7 +1000,7 @@ function bindControls() {
       await stopVoiceDictation();
     }
     const text = (promptInput?.value || '').trim();
-    if (!text) {
+    if (!text && state.composerScreenshots.length === 0) {
       promptInput?.focus();
       return;
     }
@@ -723,15 +1013,18 @@ function bindControls() {
         priority: prioInput?.value || 'normal',
         notes: (notesInput?.value || '').trim(),
         pinned: Boolean(pinInput?.checked),
+        screenshots: state.composerScreenshots,
         clearDraft: true,
       });
-      promptInput.value = '';
+      if (promptInput) promptInput.value = '';
       if (notesInput) notesInput.value = '';
       if (pinInput) pinInput.checked = false;
+      state.composerScreenshots = [];
+      renderComposerScreenshots();
       setDraftStatus('');
       state.tab = 'parked';
       render();
-      promptInput.focus();
+      promptInput?.focus();
       showToast('✓ Idea parked!');
     } finally {
       parkBtn.disabled = false;
@@ -740,8 +1033,96 @@ function bindControls() {
 
   if (parkBtn) parkBtn.onclick = submitNewPrompt;
   if (voiceBtn) voiceBtn.onclick = toggleVoiceDictation;
+  if (ssBtn && ssInput) {
+    ssBtn.onclick = () => ssInput.click();
+    ssInput.onchange = async () => {
+      if (ssInput.files?.length) {
+        await attachImageFiles(ssInput.files, 'composer');
+        ssInput.value = '';
+      }
+    };
+  }
+
+  if (composerBox) {
+    composerBox.addEventListener('dragover', (e) => {
+      if ([...(e.dataTransfer?.types || [])].includes('Files')) {
+        e.preventDefault();
+        composerBox.classList.add('dragover');
+      }
+    });
+    composerBox.addEventListener('dragleave', (e) => {
+      if (!composerBox.contains(e.relatedTarget)) {
+        composerBox.classList.remove('dragover');
+      }
+    });
+    composerBox.addEventListener('drop', async (e) => {
+      composerBox.classList.remove('dragover');
+      if (e.dataTransfer?.files?.length) {
+        const hasImg = [...e.dataTransfer.files].some((f) => String(f.type || '').startsWith('image/'));
+        if (hasImg) {
+          e.preventDefault();
+          await attachImageFiles(e.dataTransfer.files, 'composer');
+        }
+      }
+    });
+  }
+
+  window.addEventListener('paste', async (e) => {
+    const items = [...(e.clipboardData?.items || [])];
+    const imageFiles = items
+      .filter((it) => it.kind === 'file' && String(it.type || '').startsWith('image/'))
+      .map((it) => it.getAsFile())
+      .filter(Boolean);
+    if (imageFiles.length > 0) {
+      e.preventDefault();
+      await attachImageFiles(imageFiles, state.editingId ? 'edit' : 'composer');
+    }
+  });
+
+  const lightboxModal = document.getElementById('lightbox-modal');
+  const lightboxClose = document.getElementById('btn-lightbox-close');
+  const lightboxCopyPath = document.getElementById('btn-lightbox-path');
+  if (lightboxModal) {
+    lightboxModal.onclick = (e) => {
+      if (e.target === lightboxModal) closeLightbox();
+    };
+  }
+  if (lightboxClose) lightboxClose.onclick = closeLightbox;
+  if (lightboxCopyPath) {
+    lightboxCopyPath.onclick = () => {
+      if (activeLightboxPath) copyText(activeLightboxPath, '📋 Copied screenshot file path');
+    };
+  }
+
+  const helpBtn = document.getElementById('btn-help');
+  const helpModal = document.getElementById('help-modal');
+  const helpClose = document.getElementById('btn-help-close');
+  if (helpBtn) helpBtn.onclick = () => toggleHelpModal();
+  if (helpClose) helpClose.onclick = () => toggleHelpModal(false);
+  if (helpModal) {
+    helpModal.onclick = (e) => {
+      if (e.target === helpModal) toggleHelpModal(false);
+    };
+  }
 
   window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      closeLightbox();
+      toggleHelpModal(false);
+      return;
+    }
+    if (e.key === 'F1') {
+      e.preventDefault();
+      toggleHelpModal();
+      return;
+    }
+    const tag = (e.target?.tagName || '').toUpperCase();
+    const isTyping = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || e.target?.isContentEditable;
+    if (!isTyping && !e.ctrlKey && !e.metaKey && !e.altKey && e.key === '?') {
+      e.preventDefault();
+      toggleHelpModal();
+      return;
+    }
     if (e.altKey && (e.key === 'v' || e.key === 'V')) {
       e.preventDefault();
       toggleVoiceDictation();

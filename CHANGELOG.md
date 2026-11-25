@@ -2,6 +2,17 @@
 
 All notable changes to **AntiParkingLot** (*Prompt Parking Lot*) are documented in this file.
 
+## [1.1.0] - 2026-11-25
+
+### Added
+- **Screenshot Attachments:** Paste clipboard images (`Ctrl+V` after `Win+Shift+S`), drag & drop image files onto the composer or inline card editor, or attach via **📷 Image** (`png`, `jpg`/`jpeg`, `webp`, `gif`, `bmp` up to 15 MB). Supports parking screenshot-only items or combining text + multiple screenshots.
+- **Thumbnails & Lightbox Preview:** Instant client-generated WebP/JPEG thumbnail strips in the composer and parked cards (`📷 N` badge), plus a full-resolution click-to-zoom Lightbox (`Esc` to close, **📋 Copy Path**).
+- **Disk Image Management & Handoff:** Saves full-resolution screenshots under `~/.gemini/config/plugin-data/anti-parking-lot/screenshots/` with reference-counted cleanup on item/draft deletion, automatic path inclusion on **Send Here** / **New Chat** / **Attach** / **Copy**, and optional `screenshots` support on `park_prompt`.
+- **In-App Help Guide (`? Help`):** Added a built-in Application Help & Keyboard Shortcuts dialog accessible from the top bar (`? Help`) or via `F1` / `?`.
+
+### Fixed
+- Corrected repository URL references (`AnitParkingLot` -> `AntiParkingLot`) across manifests and documentation.
+
 ## [1.0.0] - 2026-11-24
 
 ### Added

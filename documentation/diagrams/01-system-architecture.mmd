@@ -20,6 +20,7 @@ flowchart TB
     subgraph OS["Local OS & Persistent Storage"]
         Mic["Windows Neural / Offline Speech-to-Text Mic"]
         JSONFile["~/.gemini/config/plugin-data/anti-parking-lot/parking_lot.json"]
+        ShotsDir["~/.gemini/config/plugin-data/anti-parking-lot/screenshots/"]
         GlobalReg["~/.gemini/config/plugins.json"]
     end
 
@@ -32,8 +33,8 @@ flowchart TB
     UIApp -->|"Renders inside"| SidePane
     UIApp -->|"Renders inside"| Sidebar
 
-    SidePane -->|"Direct app_* & voice_* calls (Zero Agent Interruption)"| MCPServer
-    Sidebar -->|"Direct app_* & voice_* calls (Zero Agent Interruption)"| MCPServer
+    SidePane -->|"Direct app_* / voice / screenshot calls"| MCPServer
+    Sidebar -->|"Direct app_* / voice / screenshot calls"| MCPServer
     SidePane -.->|"sendMessage / updateModelContext (Only When User Clicks Send)"| ChatAgent
     ChatAgent <-->|"park_prompt / list_parked_prompts"| MCPServer
 
@@ -41,3 +42,4 @@ flowchart TB
     Voice <-->|"Captures & transcribes voice"| Mic
     MCPServer <-->|"Atomic temp-file + rename"| Store
     Store <-->|"Reads & writes JSON + Draft"| JSONFile
+    Store <-->|"Saves & cleans up image files"| ShotsDir

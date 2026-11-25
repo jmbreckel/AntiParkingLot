@@ -47,11 +47,11 @@ Opens or refreshes the interactive **Parking Lot** UI in the Side Pane (`aux_pan
 
 Saves a follow-up idea or prompt from chat and renders an inline Parking Lot preview.
 
-- **Arguments:** `prompt` _(string, **required**)_, `project`, `priority` _(`"high"` | `"normal"` | `"low"`)_, `notes`, `tags` _(string[])_, `pinned` _(boolean)_.
+- **Arguments:** `prompt` _(string, **required**)_, `project`, `priority` _(`"high"` | `"normal"` | `"low"`)_, `notes`, `tags` _(string[])_, `pinned` _(boolean)_, `screenshots` _(string[], optional local image file paths copied into `screenshots/`)_.
 
 ### `list_parked_prompts`
 
-Returns a Markdown summary and structured snapshot of parked ideas without opening a UI frame.
+Returns a Markdown summary (including attached screenshot file paths) and structured snapshot of parked ideas without opening a UI frame.
 
 ### `complete_parked_prompt`
 
@@ -63,27 +63,30 @@ Deletes a single item by `id` or clears all completed items (`clearDone: true`).
 
 ---
 
-## 4. App-Only UI & Voice Tools (`visibility: ["app"]`)
+## 4. App-Only UI, Voice & Screenshot Tools (`visibility: ["app"]`)
 
-Declared with `_meta: { ui: { visibility: ["app"] } }`. Hidden from the LLM context window and invoked directly by `dist/app.html` via `app.callServerTool(...)` so UI and microphone interactions never interrupt active agent turns:
+Declared with `_meta: { ui: { visibility: ["app"] } }`. Hidden from the LLM context window and invoked directly by `dist/app.html` via `app.callServerTool(...)` so UI, screenshot, and microphone interactions never interrupt active agent turns:
 
-| Tool Name          | Arguments                                                                           | Purpose                                                                                                                  |
-| :----------------- | :---------------------------------------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------- |
-| `app_get_state`    | `{}`                                                                                | Fetches full sorted snapshot (`allItems`, `projects`, `stats`, `draft`).                                                 |
-| `app_save_draft`   | `{ prompt?, notes?, project?, priority?, pinned? }`                                 | Debounced (450 ms) auto-save of unsent composer input.                                                                   |
-| `app_save_item`    | `{ id?, prompt, title?, project?, priority?, notes?, tags?, pinned?, clearDraft? }` | Creates a new parked idea (clearing saved draft) or updates an existing card inline.                                     |
-| `app_set_status`   | `{ id?, ids?, status?, pinned?, incrementLaunch? }`                                 | Single or batch status/pin toggle and launch counter increment.                                                          |
-| `app_reorder_item` | `{ id, direction: "up" \| "down" }`                                                 | Moves a parked card up or down and normalizes `sortOrder`.                                                               |
-| `app_delete_item`  | `{ id?, ids?, clearDone? }`                                                         | Deletes one item, a batch of items, or all completed items.                                                              |
-| `app_voice_start`  | `{}`                                                                                | Starts host-side microphone speech-to-text recognition (`WinRT SpeechRecognizer` with offline `System.Speech` fallback). |
-| `app_voice_poll`   | `{ cursor? }`                                                                       | Returns newly finalized speech segments since `cursor` plus live partial hypothesis text.                                |
-| `app_voice_stop`   | `{ cursor? }`                                                                       | Stops active speech recognition cleanly and flushes any final recognized text.                                           |
+| Tool Name               | Arguments                                                                                         | Purpose                                                                                                                  |
+| :---------------------- | :------------------------------------------------------------------------------------------------ | :----------------------------------------------------------------------------------------------------------------------- |
+| `app_get_state`         | `{}`                                                                                              | Fetches full sorted snapshot (`allItems`, `projects`, `stats`, `draft`).                                                 |
+| `app_save_draft`        | `{ prompt?, notes?, project?, priority?, pinned?, screenshots? }`                                 | Debounced (450 ms) auto-save of unsent composer text and attached screenshots.                                           |
+| `app_save_item`         | `{ id?, prompt?, title?, project?, priority?, notes?, tags?, pinned?, screenshots?, clearDraft? }` | Creates a new parked idea (clearing saved draft) or updates an existing card inline.                                     |
+| `app_set_status`        | `{ id?, ids?, status?, pinned?, incrementLaunch? }`                                               | Single or batch status/pin toggle and launch counter increment.                                                          |
+| `app_reorder_item`      | `{ id, direction: "up" \| "down" }`                                                               | Moves a parked card up or down and normalizes `sortOrder`.                                                               |
+| `app_delete_item`       | `{ id?, ids?, clearDone? }`                                                                       | Deletes one item, a batch of items, or all completed items (and cleans up unreferenced screenshot files).                |
+| `app_upload_screenshot` | `{ dataUrl, name?, width?, height?, thumbDataUrl? }`                                              | Decodes and writes a pasted/dropped/selected image to `screenshots/` (up to 15 MB) and returns metadata.                 |
+| `app_get_screenshot`    | `{ id }`                                                                                          | Reads a full-resolution screenshot from `screenshots/` as a `data:` URL for Lightbox preview.                            |
+| `app_delete_screenshot` | `{ id }`                                                                                          | Removes an unsent screenshot from `draft` and deletes its disk file if unreferenced.                                     |
+| `app_voice_start`       | `{}`                                                                                              | Starts host-side microphone speech-to-text recognition (`WinRT SpeechRecognizer` with offline `System.Speech` fallback). |
+| `app_voice_poll`        | `{ cursor? }`                                                                                     | Returns newly finalized speech segments since `cursor` plus live partial hypothesis text.                                |
+| `app_voice_stop`        | `{ cursor? }`                                                                                     | Stops active speech recognition cleanly and flushes any final recognized text.                                           |
 
 ---
 
-## 5. Storage Schema (`parking_lot.json`)
+## 5. Storage Schema (`parking_lot.json` + `screenshots/`)
 
-Default path: `~/.gemini/config/plugin-data/anti-parking-lot/parking_lot.json` (override via `--data-dir=<path>` or `PARKING_LOT_DATA_DIR`).
+Default path: `~/.gemini/config/plugin-data/anti-parking-lot/parking_lot.json` and `screenshots/` directory (override via `--data-dir=<path>` or `PARKING_LOT_DATA_DIR`).
 
 ```json
 {
@@ -94,7 +97,8 @@ Default path: `~/.gemini/config/plugin-data/anti-parking-lot/parking_lot.json` (
     "project": "MyLibrary",
     "priority": "normal",
     "pinned": false,
-    "updatedAt": "2026-11-24T20:00:00.000Z"
+    "screenshots": [],
+    "updatedAt": "2026-11-25T16:00:00.000Z"
   },
   "items": [
     {
@@ -106,12 +110,26 @@ Default path: `~/.gemini/config/plugin-data/anti-parking-lot/parking_lot.json` (
       "priority": "high",
       "tags": ["ui", "search"],
       "pinned": true,
+      "screenshots": [
+        {
+          "id": "ss_9f8e7d6c5b",
+          "filename": "ss_9f8e7d6c5b.png",
+          "filePath": "C:\\Users\\user\\.gemini\\config\\plugin-data\\anti-parking-lot\\screenshots\\ss_9f8e7d6c5b.png",
+          "mimeType": "image/png",
+          "name": "detail-modal-snip.png",
+          "sizeBytes": 84210,
+          "width": 1280,
+          "height": 720,
+          "thumbDataUrl": "data:image/webp;base64,...",
+          "createdAt": "2026-11-25T15:54:50.000Z"
+        }
+      ],
       "status": "parked",
       "sortOrder": 10,
       "launchCount": 0,
       "lastLaunchedAt": null,
-      "createdAt": "2026-11-24T19:55:00.000Z",
-      "updatedAt": "2026-11-24T19:55:00.000Z",
+      "createdAt": "2026-11-25T15:55:00.000Z",
+      "updatedAt": "2026-11-25T15:55:00.000Z",
       "completedAt": null
     }
   ]

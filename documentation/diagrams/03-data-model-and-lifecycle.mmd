@@ -1,9 +1,9 @@
 stateDiagram-v2
     [*] --> EmptyComposer
 
-    EmptyComposer --> DraftSaved: User types in Side Pane (450ms auto-save)
-    DraftSaved --> DraftSaved: Continued typing or tab switch recovery
-    DraftSaved --> EmptyComposer: User clears input
+    EmptyComposer --> DraftSaved: User types, dictates, or pastes screenshot (450ms auto-save)
+    DraftSaved --> DraftSaved: Continued edits, screenshots, or tab switch recovery
+    DraftSaved --> EmptyComposer: User clears input & screenshots
 
     DraftSaved --> Parked: "+ Park Idea" or Ctrl+Enter (app_save_item)
     EmptyComposer --> Parked: Agent calls park_prompt from chat
@@ -27,5 +27,5 @@ stateDiagram-v2
     BatchSelected --> CompletedDone: "Send (N)" or Batch "Done"
 
     CompletedDone --> Parked: Click "Reopen"
-    Parked --> [*]: Click "Delete" (app_delete_item)
-    CompletedDone --> [*]: Click "Delete" or "Clear Done"
+    Parked --> [*]: Click "Delete" (removes item + unreferenced screenshots)
+    CompletedDone --> [*]: Click "Delete" or "Clear Done" (cleans up screenshots)

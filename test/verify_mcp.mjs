@@ -29,9 +29,9 @@ try {
     openTool._meta?.['com.google.antigravity/ui']?.entrypoints?.map((e) => e.type),
     ['aux_pane', 'global']
   );
-  for (const voiceTool of ['app_voice_start', 'app_voice_poll', 'app_voice_stop']) {
-    const vt = tools.find((t) => t.name === voiceTool);
-    assert.ok(vt, `${voiceTool} must exist`);
+  for (const appTool of ['app_voice_start', 'app_voice_poll', 'app_voice_stop', 'app_upload_screenshot', 'app_get_screenshot', 'app_delete_screenshot']) {
+    const vt = tools.find((t) => t.name === appTool);
+    assert.ok(vt, `${appTool} must exist`);
     assert.deepEqual(vt._meta?.ui?.visibility, ['app']);
   }
 
@@ -43,17 +43,47 @@ try {
 
   const readRes = await client.readResource({ uri: 'ui://parking-lot/app.html' });
   assert.ok(readRes.contents[0].text.includes('btn-voice'), 'Bundled app.html should contain Voice button');
+  assert.ok(readRes.contents[0].text.includes('btn-screenshot'), 'Bundled app.html should contain Image button');
+  assert.ok(readRes.contents[0].text.includes('btn-help'), 'Bundled app.html should contain Help button');
+  assert.ok(readRes.contents[0].text.includes('help-modal'), 'Bundled app.html should contain Help modal');
   assert.ok(readRes.contents[0].text.length > 50000, 'Bundled app.html should contain esbuild bundle');
 
-  // 3. Verify draft auto-save & restore
+  // 3. Verify screenshot upload, draft auto-save, full retrieval & automatic cleanup on delete
+  const samplePngDataUrl =
+    'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+  const uploadedRes = await client.callTool({
+    name: 'app_upload_screenshot',
+    arguments: {
+      dataUrl: samplePngDataUrl,
+      name: 'bug-snip.png',
+      width: 1,
+      height: 1,
+    },
+  });
+  const uploadedSs = uploadedRes.structuredContent.screenshot;
+  assert.ok(uploadedSs?.id?.startsWith('ss_'), 'Uploaded screenshot should return ss_ ID');
+  assert.ok(fs.existsSync(uploadedSs.filePath), 'Uploaded screenshot file should exist on disk');
+
+  const fullSsRes = await client.callTool({
+    name: 'app_get_screenshot',
+    arguments: { id: uploadedSs.id },
+  });
+  assert.equal(fullSsRes.structuredContent.screenshot.dataUrl, samplePngDataUrl);
+
   await client.callTool({
     name: 'app_save_draft',
-    arguments: { prompt: 'Voice dictated idea while agent runs', project: 'MyLibrary', priority: 'high' },
+    arguments: {
+      prompt: 'Voice dictated idea while agent runs',
+      project: 'MyLibrary',
+      priority: 'high',
+      screenshots: [uploadedSs],
+    },
   });
   const stateWithDraft = await client.callTool({ name: 'app_get_state', arguments: {} });
   assert.equal(stateWithDraft.structuredContent.draft?.prompt, 'Voice dictated idea while agent runs');
+  assert.equal(stateWithDraft.structuredContent.draft?.screenshots?.length, 1);
 
-  // 4. Verify parking ideas (UI app_save_item clears draft; chat park_prompt adds second item)
+  // 4. Verify parking ideas with screenshots (UI app_save_item clears draft; chat park_prompt adds second item)
   const firstRes = await client.callTool({
     name: 'app_save_item',
     arguments: {
@@ -61,11 +91,20 @@ try {
       project: 'MyLibrary',
       priority: 'high',
       notes: 'catalog/opds.py',
+      screenshots: [uploadedSs],
       clearDraft: true,
     },
   });
   assert.equal(firstRes.structuredContent.draft, null, 'Draft should clear on submit');
   const firstId = firstRes.structuredContent.lastSaved.id;
+  assert.equal(firstRes.structuredContent.lastSaved.screenshots?.length, 1);
+  assert.ok(fs.existsSync(uploadedSs.filePath), 'Screenshot file must persist when moved from draft to item');
+
+  const listRes = await client.callTool({
+    name: 'list_parked_prompts',
+    arguments: { status: 'parked' },
+  });
+  assert.ok(listRes.content[0].text.includes(uploadedSs.filePath), 'Markdown summary should expose screenshot filePath');
 
   const secondRes = await client.callTool({
     name: 'park_prompt',
@@ -90,12 +129,13 @@ try {
   assert.equal(batchDone.structuredContent.stats.parked, 0);
   assert.equal(batchDone.structuredContent.stats.done, 2);
 
-  // 6. Verify clearDone
+  // 6. Verify clearDone & automatic screenshot file cleanup
   const cleared = await client.callTool({
     name: 'delete_parked_prompt',
     arguments: { clearDone: true },
   });
   assert.equal(cleared.structuredContent.stats.total, 0);
+  assert.equal(fs.existsSync(uploadedSs.filePath), false, 'Deleted item screenshot file should be cleaned up from disk');
 
   console.log('ALL_CHECKS_PASSED', { toolCount: tools.length, htmlBytes: readRes.contents[0].text.length });
 } finally {

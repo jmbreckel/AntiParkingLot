@@ -73,14 +73,20 @@ function formatMarkdownSummary(snap, heading = 'Prompt Parking Lot') {
   }
   const lines = [`### ${heading} (${stats.parked} parked · ${stats.done} done)`];
   items.forEach((it, idx) => {
+    const ssCount = Array.isArray(it.screenshots) ? it.screenshots.length : 0;
     const flags = [
       it.status === 'done' ? '✓ DONE' : null,
       it.pinned ? '📌 Pinned' : null,
       it.priority === 'high' ? '🔥 High' : it.priority === 'low' ? '🧊 Low' : null,
       it.project ? `📁 ${it.project}` : null,
+      ssCount > 0 ? `📷 ${ssCount} screenshot${ssCount === 1 ? '' : 's'}` : null,
     ].filter(Boolean);
     const metaSuffix = flags.length ? ` [${flags.join(' · ')}]` : '';
-    lines.push(`${idx + 1}. **\`${it.id}\`**${metaSuffix}: ${it.prompt}${it.notes ? `\n   - *Note:* ${it.notes}` : ''}`);
+    const ssLines =
+      ssCount > 0
+        ? it.screenshots.map((s) => `\n   - *Screenshot:* \`${s.filePath}\``).join('')
+        : '';
+    lines.push(`${idx + 1}. **\`${it.id}\`**${metaSuffix}: ${it.prompt}${it.notes ? `\n   - *Note:* ${it.notes}` : ''}${ssLines}`);
   });
   return lines.join('\n');
 }
@@ -144,6 +150,11 @@ const TOOLS = [
         pinned: {
           type: 'boolean',
           description: 'Pin this idea to the top of the Parking Lot.',
+        },
+        screenshots: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Optional local image file paths on disk to attach as screenshots.',
         },
       },
       required: ['prompt'],
@@ -234,6 +245,7 @@ const TOOLS = [
         project: { type: 'string' },
         priority: { type: 'string' },
         pinned: { type: 'boolean' },
+        screenshots: { type: 'array', items: { type: 'object' } },
       },
     },
     _meta: APP_ONLY_META,
@@ -252,9 +264,49 @@ const TOOLS = [
         notes: { type: 'string' },
         tags: { type: 'array', items: { type: 'string' } },
         pinned: { type: 'boolean' },
+        screenshots: { type: 'array', items: { type: 'object' } },
         clearDraft: { type: 'boolean' },
       },
-      required: ['prompt'],
+    },
+    _meta: APP_ONLY_META,
+  },
+  {
+    name: 'app_upload_screenshot',
+    description: 'Internal UI save pasted/dropped/uploaded screenshot image to disk.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        dataUrl: { type: 'string' },
+        name: { type: 'string' },
+        width: { type: 'number' },
+        height: { type: 'number' },
+        thumbDataUrl: { type: 'string' },
+      },
+      required: ['dataUrl'],
+    },
+    _meta: APP_ONLY_META,
+  },
+  {
+    name: 'app_get_screenshot',
+    description: 'Internal UI load full-resolution screenshot image data URL by ID.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string' },
+      },
+      required: ['id'],
+    },
+    _meta: APP_ONLY_META,
+  },
+  {
+    name: 'app_delete_screenshot',
+    description: 'Internal UI delete unreferenced draft screenshot by ID.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string' },
+      },
+      required: ['id'],
     },
     _meta: APP_ONLY_META,
   },
@@ -398,11 +450,13 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     if (name === 'park_prompt') {
       const saved = store.saveItem(args);
       const snap = store.getSnapshot({ status: 'parked', project: args.project || '' });
+      const ssCount = Array.isArray(saved.screenshots) ? saved.screenshots.length : 0;
+      const ssNote = ssCount > 0 ? ` [${ssCount} screenshot${ssCount === 1 ? '' : 's'} attached]` : '';
       return {
         content: [
           {
             type: 'text',
-            text: `Parked idea **\`${saved.id}\`**${saved.project ? ` under **${saved.project}**` : ''} (${saved.priority} priority):\n> ${saved.prompt}`,
+            text: `Parked idea **\`${saved.id}\`**${saved.project ? ` under **${saved.project}**` : ''} (${saved.priority} priority)${ssNote}:\n> ${saved.prompt}`,
           },
         ],
         structuredContent: { ...snap, lastSaved: saved },
@@ -468,6 +522,30 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       return {
         content: [{ type: 'text', text: `Saved ${saved.id}` }],
         structuredContent: { ...snap, lastSaved: saved },
+      };
+    }
+
+    if (name === 'app_upload_screenshot') {
+      const screenshot = store.saveScreenshot(args);
+      return {
+        content: [{ type: 'text', text: `Uploaded ${screenshot.id}` }],
+        structuredContent: { isVoiceOrDraft: true, screenshot },
+      };
+    }
+
+    if (name === 'app_get_screenshot') {
+      const screenshot = store.getScreenshotDataUrl(args.id);
+      return {
+        content: [{ type: 'text', text: 'OK' }],
+        structuredContent: { isVoiceOrDraft: true, screenshot },
+      };
+    }
+
+    if (name === 'app_delete_screenshot') {
+      const res = store.deleteScreenshot(args.id);
+      return {
+        content: [{ type: 'text', text: 'Deleted screenshot' }],
+        structuredContent: { isVoiceOrDraft: true, ...res },
       };
     }
 

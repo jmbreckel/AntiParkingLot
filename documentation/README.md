@@ -9,10 +9,10 @@ Welcome to the official documentation for **AntiParkingLot** (*Prompt Parking Lo
 | Guide | Description |
 | :--- | :--- |
 | **[Installation Guide](./installation.md)** | Prerequisites, building the plugin, global Antigravity registration (`plugins.json` or `~/.gemini/config/plugins/`), updating, uninstalling, and troubleshooting. |
-| **[Instructions & Conversations (`../instruction.md`)](../instruction.md)** | Quick-reference instructions explaining how Parking Lot interacts with conversations (`Send Here` vs `New Chat` vs `Attach`), voice input, and batch sending. |
-| **[User Guide](./user-guide.md)** | Day-to-day workflow: opening the Side Pane while Antigravity works, keyboard shortcuts, draft auto-save, single vs. multi-idea batch sending, and project/priority filtering. |
-| **[Architecture & Design](./architecture.md)** | Deep dive into the zero-interruption Side-Pane architecture, atomic file storage, `esbuild` single-file UI bundling, and global workspace registration. |
-| **[MCP & Storage Reference](./mcp-reference.md)** | Complete schema reference for host/model MCP tools, `visibility: ["app"]` UI tools, the `ui://parking-lot/app.html` resource, and `parking_lot.json`. |
+| **[Instructions & Conversations (`../instruction.md`)](../instruction.md)** | Quick-reference instructions explaining how Parking Lot interacts with conversations (`Send Here` vs `New Chat` vs `Attach`), screenshots, voice input, in-app help, and batch sending. |
+| **[User Guide](./user-guide.md)** | Day-to-day workflow: opening the Side Pane while Antigravity works, pasting/dropping screenshots, voice dictation, in-app `? Help` & keyboard shortcuts, draft auto-save, and batch sending. |
+| **[Architecture & Design](./architecture.md)** | Deep dive into the zero-interruption Side-Pane architecture, screenshot storage & lifecycle, atomic file storage, `esbuild` single-file UI bundling, and global workspace registration. |
+| **[MCP & Storage Reference](./mcp-reference.md)** | Complete schema reference for host/model MCP tools, `visibility: ["app"]` UI/voice/screenshot tools, the `ui://parking-lot/app.html` resource, and `parking_lot.json`. |
 
 ---
 

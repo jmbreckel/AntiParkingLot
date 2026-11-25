@@ -16,7 +16,7 @@ This guide explains how to install **AntiParkingLot** (*Prompt Parking Lot*) glo
 Run the included cross-platform installer script from the repository root. It installs dependencies, builds `dist/app.html`, and registers the plugin globally with Antigravity:
 
 ```powershell
-git clone https://github.com/jmbreckel/AnitParkingLot.git AntiParkingLot
+git clone https://github.com/jmbreckel/AntiParkingLot.git
 cd AntiParkingLot
 npm run install:global
 ```
@@ -44,7 +44,7 @@ If you prefer to set up each step manually instead of using `scripts/install-glo
 Clone the repository and install its dependencies. `node_modules/` must be present inside the plugin folder at runtime, and `dist/app.html` contains the bundled Side-Pane UI:
 
 ```powershell
-git clone https://github.com/jmbreckel/AnitParkingLot.git AntiParkingLot
+git clone https://github.com/jmbreckel/AntiParkingLot.git
 cd AntiParkingLot
 npm install
 npm run build

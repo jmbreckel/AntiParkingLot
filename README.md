@@ -1,6 +1,6 @@
 # AntiParkingLot — Prompt Parking Lot for Antigravity
 
-An Antigravity **Plugin + Side-Pane MCP App** designed for one core workflow: **type or voice-dictate ideas while Antigravity is busy working without interrupting the active run, then send them when you're ready.**
+An Antigravity **Plugin + Side-Pane MCP App** designed for one core workflow: **type, voice-dictate, or paste screenshots while Antigravity is busy working without interrupting the active run, then send them when you're ready.**
 
 ![Prompt Parking Lot Side-Pane UI](./assets/screenshot.png)
 
@@ -22,15 +22,16 @@ See the **[Installation Guide](./documentation/installation.md)** for alternativ
 
 1. **Zero-Interruption Side Pane (`+` → Parking Lot):**
    - Open **Parking Lot** from the right-hand **Side Pane `+` menu** or **Left Sidebar** anytime—even mid-run while Antigravity is working.
-   - Type or click **🎤 Voice** (`Alt+V`, or `Win+H`) to convert speech to text right inside the Parking Lot composer.
-   - Clicking **+ Park Idea** (`Ctrl+Enter`) persists directly to `~/.gemini/config/plugin-data/anti-parking-lot/parking_lot.json` without interrupting or queueing messages on the active agent.
-   - Unsent composer text auto-saves locally (450 ms debounce) so switching tabs never loses a half-typed or half-spoken thought.
+   - Type, click **🎤 Voice** (`Alt+V`, or `Win+H`), or attach screenshots via **Ctrl+V paste**, **drag & drop**, or **📷 Image** (with inline thumbnail previews and click-to-zoom lightbox).
+   - Clicking **+ Park Idea** (`Ctrl+Enter`) persists directly to `~/.gemini/config/plugin-data/anti-parking-lot/` (`parking_lot.json` + `screenshots/`) without interrupting or queueing messages on the active agent.
+   - Unsent composer text and pasted screenshots auto-save locally (450 ms debounce) so switching tabs never loses a half-typed thought or snip.
 
 2. **Send When Ready (Single or Combined):**
-   - **▶ Send Here** — Sends the parked idea straight into your current conversation once Antigravity is ready.
+   - **▶ Send Here** — Sends the parked idea (plus notes & attached screenshot paths) straight into your current conversation once Antigravity is ready.
    - **↗ New Chat** — Spins off a brand-new conversation in the current project immediately—even while your current chat is still busy.
-   - **📎 Attach** — Attaches parked ideas as context to your next message.
+   - **📎 Attach** — Attaches parked ideas (and screenshot paths) as context to your next message.
    - **Batch Combine** — Check multiple parked ideas to merge and send them together as a numbered prompt (`▶ Send (N)` / `↗ New Chat (N)`).
+   - **? Help (`F1` / `?`)** — Built-in quick-reference guide and keyboard shortcut cheatsheet right inside the panel.
 
 ## Architecture
 
