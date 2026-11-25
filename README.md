@@ -2,14 +2,14 @@
 
 An Antigravity **Plugin + Side-Pane MCP App** designed for one core workflow: **type or voice-dictate ideas while Antigravity is busy working without interrupting the active run, then send them when you're ready.**
 
-![System Architecture](./documentation/diagrams/01-system-architecture.png)
+![Prompt Parking Lot Side-Pane UI](./assets/screenshot.png)
 
 ## Quick Install (Global on Antigravity)
 
 Requires **Node.js 18+** and **Antigravity**.
 
 ```powershell
-git clone https://github.com/jmbreckel/AnitParkingLot.git AntiParkingLot
+git clone https://github.com/jmbreckel/AntiParkingLot.git
 cd AntiParkingLot
 npm run install:global
 ```
@@ -32,6 +32,10 @@ See the **[Installation Guide](./documentation/installation.md)** for alternativ
    - **📎 Attach** — Attaches parked ideas as context to your next message.
    - **Batch Combine** — Check multiple parked ideas to merge and send them together as a numbered prompt (`▶ Send (N)` / `↗ New Chat (N)`).
 
+## Architecture
+
+![System Architecture](./documentation/diagrams/01-system-architecture.png)
+
 ## Documentation
 
 Full guides and `4x` resolution architectural/workflow diagrams (`.mmd` + `.png`) are available in **[`/documentation`](./documentation/README.md)**:
@@ -49,7 +53,9 @@ Full guides and `4x` resolution architectural/workflow diagrams (`.mmd` + `.png`
 AntiParkingLot/
 ├── plugin.json                  # Antigravity plugin manifest
 ├── mcp_config.json              # Launches Node.js MCP App server
-├── assets/logo.svg              # Square plugin icon
+├── assets/
+│   ├── logo.svg                 # Square plugin icon
+│   └── screenshot.png           # Side-Pane UI screenshot
 ├── documentation/               # Guides + Mermaid (.mmd) & 4x PNG diagrams
 │   ├── README.md
 │   ├── installation.md
